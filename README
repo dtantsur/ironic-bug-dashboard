@@ -1,0 +1,4 @@
+This project is work-in-progress. To test::
+
+     $ make env  # do it once after git pull
+     $ make run  # will output something
