@@ -5,7 +5,8 @@ run:
 env:
 	rm -rf .env
 	virtualenv .env
-	.env/bin/pip install --allow-all-external --allow-unverified lazr.authentication \
-		Flask launchpadlib pyxdg
+	.env/bin/pip install \
+		--allow-all-external --allow-unverified lazr.authentication \
+		launchpadlib pyxdg
 
 .PHONY: run env

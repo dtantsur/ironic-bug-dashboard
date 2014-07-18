@@ -33,17 +33,30 @@ class Backend(object):
         conditions.setdefault('status', self.OPEN_STATUSES)
         return IterableWithLength(self.projects, conditions)
 
-    def new_bugs(self):
-        return self.search_bugs(status='New')
+
+STATS_TEMPLATE = (
+    "Open: {total}. {new} new, {progress} in progress, "
+    "{critical} critical, {high} high and {incomplete} incomplete"
+)
 
 
 def main():
     be = Backend()
+    new_bugs = be.search_bugs(status='New')
+    print("*** STATS ***")
+    stats = STATS_TEMPLATE.format(
+        total=len(be.search_bugs()),
+        new=len(new_bugs),
+        progress=len(be.search_bugs(status='In Progress')),
+        critical=len(be.search_bugs(importance='Critical')),
+        high=len(be.search_bugs(importance='High')),
+        incomplete=len(be.search_bugs(status='Incomplete')),
+    )
+    print(stats)
     print("*** NEW BUGS ***")
-    new_bugs = be.new_bugs()
     for bug in new_bugs:
-        print(bug, '\t', bug.title)
-    print('Total', len(new_bugs))
+        msg = "{bug.web_link}\t{bug.title}\t{bug.date_created}"
+        print(msg.format(bug=bug))
 
 
 if __name__ == '__main__':
