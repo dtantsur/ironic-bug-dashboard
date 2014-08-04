@@ -2,7 +2,7 @@ PYTHON?=python
 
 run:
 	@test -d .env || { echo "Run make env first"; exit 1; }
-	.env/bin/python ironic_bug_dashboard.py
+	.env/bin/python ironic_bug_dashboard.py --debug
 
 env:
 	rm -rf .env
