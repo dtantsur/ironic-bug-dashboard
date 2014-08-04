@@ -73,6 +73,10 @@ STATS_TEMPLATE = (
     "{critical} critical, {high} high and {incomplete} incomplete</p>"
     "<h2>New bugs</h2>"
     "<ul>{new_bugs_html}</ul>"
+    "<br><br><br>"  # Being a cool frontend developer
+    "<a href=\"https://github.com/Divius/ironic-bug-dashboard\">"
+    "Source code, pull requests, suggestions"
+    "</a>"
 )
 
 
