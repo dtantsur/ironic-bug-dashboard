@@ -5,8 +5,6 @@ run:
 env:
 	rm -rf .env
 	virtualenv .env
-	.env/bin/pip install \
-		--allow-all-external --allow-unverified lazr.authentication \
-		launchpadlib pyxdg
+	.env/bin/pip install requests
 
 .PHONY: run env
