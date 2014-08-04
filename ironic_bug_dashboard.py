@@ -83,29 +83,27 @@ BUG_TEMPLATE = (
 )
 
 
-def main():
-    app = Flask(__name__)
-    cache = Cache(app, config={'CACHE_TYPE': 'simple'})
-    be = Backend()
+app = Flask(__name__)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+be = Backend()
 
-    @app.route("/")
-    @cache.cached(timeout=50)
-    def index():
-        new_bugs = be.search_bugs(status='New')
-        stats = STATS_TEMPLATE.format(
-            total=len(be.search_bugs()),
-            new=len(new_bugs),
-            progress=len(be.search_bugs(status='In Progress')),
-            critical=len(be.search_bugs(importance='Critical')),
-            high=len(be.search_bugs(importance='High')),
-            incomplete=len(be.search_bugs(status='Incomplete')),
-            new_bugs_html=''.join(BUG_TEMPLATE.format(bug=bug)
-                                  for bug in new_bugs)
-        )
-        return stats
 
-    app.run()
+@app.route("/")
+@cache.cached(timeout=300)
+def index():
+    new_bugs = be.search_bugs(status='New')
+    stats = STATS_TEMPLATE.format(
+        total=len(be.search_bugs()),
+        new=len(new_bugs),
+        progress=len(be.search_bugs(status='In Progress')),
+        critical=len(be.search_bugs(importance='Critical')),
+        high=len(be.search_bugs(importance='High')),
+        incomplete=len(be.search_bugs(status='Incomplete')),
+        new_bugs_html=''.join(BUG_TEMPLATE.format(bug=bug)
+                              for bug in new_bugs)
+    )
+    return stats
 
 
 if __name__ == '__main__':
-    main()
+    app.run()
