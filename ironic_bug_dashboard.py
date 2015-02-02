@@ -6,7 +6,7 @@ from flask.ext.cache import Cache
 from simple_lp import search_bugs, OPEN_STATUSES
 
 
-STATS_TEMPLATE = (
+STATS_TEMPLATE = unicode(
     "<h1>Stats</h1>"
     "<p>Open: {total}. {new} new, {progress} in progress, "
     "{critical} critical, {high} high and {incomplete} incomplete</p>"
@@ -26,16 +26,16 @@ STATS_TEMPLATE = (
 )
 
 
-BUG_TEMPLATE = (
+BUG_TEMPLATE = unicode(
     "<li>"
     "<a href=\"{bug[web_link]}\">{bug[title]}</a><br>"
     "created on {bug[date_created]}"
 )
 
 
-ASSIGNEE_TEMPLATE = (
-    " assigned to "
-    "<a href=\"https://launchpad.net/~{assignee}\">~{assignee}</a>"
+ASSIGNEE_TEMPLATE = unicode(
+    u" assigned to "
+    u"<a href=\"https://launchpad.net/~{assignee}\">~{assignee}</a>"
 )
 
 
@@ -73,7 +73,7 @@ def index():
                     else '!!! Unassigned !!!')
         users.setdefault(assignee, []).append(bug)
     assigned_bugs_html = ''.join(
-        '<h3>{assignee}</h3><ul>{bugs}</ul>'.format(
+        u'<h3>{assignee}</h3><ul>{bugs}</ul>'.format(
             assignee=assignee,
             bugs=format_bugs(bugs, False)
         )
