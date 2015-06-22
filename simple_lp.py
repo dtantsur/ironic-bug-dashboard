@@ -9,8 +9,6 @@ OPEN_STATUSES = set(['New', 'In Progress', 'Triaged', 'Confirmed',
 
 PROJECT_TEMPLATE = 'https://api.launchpad.net/1.0/%s'
 
-_PROJECTS = [PROJECT_TEMPLATE % p for p in PROJECT_NAMES]
-
 
 def get_json(url, params):
     result = requests.get(url, params=params)
@@ -66,5 +64,6 @@ class Collection(object):
 def search_bugs(**conditions):
     conditions.setdefault('status', OPEN_STATUSES)
     conditions['ws.op'] = 'searchTasks'
-    return IterableWithLength(Collection(p, conditions)
-                              for p in _PROJECTS)
+    project_names = conditions.pop('project_names', PROJECT_NAMES)
+    return IterableWithLength(Collection(PROJECT_TEMPLATE % p, conditions)
+                              for p in project_names)
