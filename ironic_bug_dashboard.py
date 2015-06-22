@@ -33,7 +33,7 @@ STATS_TEMPLATE = unicode(
     "<p>Ironic bugs that have 'Undecided' importance, but have status "
     "other than 'New' or 'Incomplete'.</p>"
     "<ul>{undecided_bugs_html}</ul>"
-    "<h2>Unassigned In Progess</h2>"
+    "<h2>Unassigned In Progress</h2>"
     "<p>Ironic bugs that have 'In Progress' status, but don't have "
     "an assignee.</p>"
     "<ul>{unassigned_in_progress}</ul>"
@@ -42,14 +42,16 @@ STATS_TEMPLATE = unicode(
     "<ul>{new_bugs_html}</ul>"
     "<h2>In Progress Bugs</h2>"
     "{assigned_bugs_html}"
+)
+
+
+FOOTER = unicode(
     "<br><br>"  # Being a cool frontend developer
     "<a href=\"https://github.com/divius/ironic-bug-dashboard\">"
     "Source code, pull requests, suggestions"
     "</a>"
+    "</div></body></html>"
 )
-
-
-FOOTER = unicode("</body></html>")
 
 
 STATS_TEMPLATE = HEADER + STATS_TEMPLATE + FOOTER
