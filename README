@@ -5,6 +5,9 @@ It is a Flask application and can be run as such. For local testing use:
    $ make env
    $ make run
 
+It is also set to run on openshift and actually runs on
+http://ironic-divius.rhcloud.com/
+
 Licensed under MIT license as follows:
 
 Copyright (c) 2014 Dmitry Tantsur
