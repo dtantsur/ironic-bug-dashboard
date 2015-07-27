@@ -47,7 +47,7 @@ STATS_TEMPLATE = unicode(
 
 FOOTER = unicode(
     "<br><br>"  # Being a cool frontend developer
-    "<a href=\"https://github.com/divius/ironic-bug-dashboard\">"
+    "<a href=\"https://github.com/dtantsur/ironic-bug-dashboard\">"
     "Source code, pull requests, suggestions"
     "</a>"
     "</div></body></html>"

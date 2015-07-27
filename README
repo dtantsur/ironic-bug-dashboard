@@ -2,8 +2,7 @@ This is very simple dashboard for tracking outstanding bugs in Ironic.
 
 It is a Flask application and can be run as such. For local testing use:
 
-   $ make env
-   $ make run
+   $ tox -erun
 
 It is also set to run on openshift and actually runs on
 http://ironic-divius.rhcloud.com/

@@ -1,2 +1,6 @@
-.env/
+.eggs/
+.tox/
+AUTHORS
+ChangeLog
+*.egg-info/
 *.pyc
