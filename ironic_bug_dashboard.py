@@ -1,9 +1,12 @@
+import logging
 import sys
 
 from flask import Flask
-from flask.ext.cache import Cache
 
-from simple_lp import search_bugs, OPEN_STATUSES
+from simple_lp import search_bugs, search_nova_bugs, OPEN_STATUSES
+
+
+LOG = logging.getLogger(__name__)
 
 
 HEADER = unicode("""<!DOCTYPE html>
@@ -47,9 +50,9 @@ STATS_TEMPLATE = unicode(
 
 FOOTER = unicode(
     "<br><br>"  # Being a cool frontend developer
-    "<a href=\"https://github.com/dtantsur/ironic-bug-dashboard\">"
+    "<p><a href=\"https://github.com/dtantsur/ironic-bug-dashboard\">"
     "Source code, pull requests, suggestions"
-    "</a>"
+    "</a></p>"
     "</div></body></html>"
 )
 
@@ -71,7 +74,6 @@ ASSIGNEE_TEMPLATE = unicode(
 
 
 app = Flask(__name__)
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 
 def format_bug(bug, with_assignee=True):
@@ -88,34 +90,54 @@ def format_bugs(bugs, with_assignee=True):
                    for bug in bugs)
 
 
-def search_nova_bugs(**conditions):
-    conditions['project_names'] = ('nova',)
-    conditions['tags'] = 'ironic'
-    return search_bugs(**conditions)
+def search_in_cache(cache, status=None, importance=None):
+    if isinstance(status, str):
+        status = (status,)
+
+    for bug in cache['all']:
+        if status is not None and bug['status'] not in status:
+            continue
+        if importance is not None and bug['importance'] != importance:
+            continue
+        yield bug
+
+
+TRIAGED_STATUSES = OPEN_STATUSES - {'New', 'Incomplete'}
 
 
 @app.route("/")
-@cache.cached(timeout=60)
 def index():
-    new_bugs = search_bugs(status='New')
-    undecided_bugs = search_bugs(importance='Undecided',
-                                 status=OPEN_STATUSES -
-                                 set(['New', 'Incomplete']))
-    in_progress_bugs = search_bugs(status='In Progress')
+    LOG.debug('updating bugs')
+    ironic_bugs = {}
+    nova_bugs = {}
 
-    nova_new = search_nova_bugs(status='New')
-    nova_all = search_nova_bugs()
-    nova_high = search_nova_bugs(importance='High')
-    nova_critical = search_nova_bugs(importance='Critical')
+    ironic_bugs['all'] = list(search_bugs())
+    LOG.debug('%d ironic bugs', len(ironic_bugs['all']))
+    nova_bugs['all'] = list(search_nova_bugs())
+    LOG.debug('%d nova bugs', len(nova_bugs['all']))
 
-    new_or_confirmed = (list(search_bugs(status=['New', 'Confirmed'])) +
-                        list(search_nova_bugs(status=['New', 'Confirmed'])))
+    for d in (ironic_bugs, nova_bugs):
+        for status in ('New', 'Incomplete', 'In Progress'):
+            d[status] = list(search_in_cache(d, status=status))
+        for importance in ('High', 'Critical'):
+            d[importance] = list(search_in_cache(
+                d, importance=importance))
+
+    ironic_undecided = search_in_cache(ironic_bugs,
+                                       importance='Undecided',
+                                       status=TRIAGED_STATUSES)
+
+    ironic_new_confirmed = search_in_cache(ironic_bugs,
+                                           status=['New', 'Confirmed'])
+    nova_new_confirmed = search_in_cache(nova_bugs,
+                                         status=['New', 'Confirmed'])
+    new_or_confirmed = list(ironic_new_confirmed) + list(nova_new_confirmed)
     new_or_confirmed.sort(key=lambda b: (b['status'] != 'New',
                                          b['date_created']))
 
     users = {}
     unassigned_in_progress = []
-    for bug in in_progress_bugs:
+    for bug in ironic_bugs['In Progress']:
         assignee = (bug['assignee_link'].split('~')[1]
                     if bug['assignee_link'] is not None else '')
         if assignee:
@@ -130,18 +152,18 @@ def index():
         for (assignee, bugs) in sorted(users.items(), key=lambda x: x[1]))
 
     stats = STATS_TEMPLATE.format(
-        total=len(search_bugs()),
-        new=len(new_bugs),
-        progress=len(in_progress_bugs),
-        critical=len(search_bugs(importance='Critical')),
-        high=len(search_bugs(importance='High')),
-        incomplete=len(search_bugs(status='Incomplete')),
-        nova_new=len(nova_new),
-        nova_total=len(nova_all),
-        nova_critical=len(nova_critical),
-        nova_high=len(nova_high),
+        total=len(ironic_bugs['all']),
+        new=len(ironic_bugs['New']),
+        progress=len(ironic_bugs['In Progress']),
+        critical=len(ironic_bugs['Critical']),
+        high=len(ironic_bugs['High']),
+        incomplete=len(ironic_bugs['Incomplete']),
+        nova_new=len(nova_bugs['New']),
+        nova_total=len(nova_bugs['all']),
+        nova_critical=len(nova_bugs['Critical']),
+        nova_high=len(nova_bugs['High']),
         new_bugs_html=format_bugs(new_or_confirmed),
-        undecided_bugs_html=format_bugs(undecided_bugs),
+        undecided_bugs_html=format_bugs(ironic_undecided),
         assigned_bugs_html=assigned_bugs_html,
         unassigned_in_progress=format_bugs(unassigned_in_progress),
     )
@@ -153,4 +175,8 @@ if __name__ == '__main__':
         debug = sys.argv[1] == '--debug'
     except IndexError:
         debug = False
+    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
+    logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(
+        logging.ERROR)
+
     app.run(debug=debug)

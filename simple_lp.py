@@ -67,3 +67,9 @@ def search_bugs(**conditions):
     project_names = conditions.pop('project_names', PROJECT_NAMES)
     return IterableWithLength(Collection(PROJECT_TEMPLATE % p, conditions)
                               for p in project_names)
+
+
+def search_nova_bugs(**conditions):
+    conditions['project_names'] = ('nova',)
+    conditions['tags'] = 'ironic'
+    return search_bugs(**conditions)
