@@ -79,3 +79,9 @@ def search_nova_bugs(**conditions):
     conditions['project_names'] = ('nova',)
     conditions['tags'] = 'ironic'
     return search_bugs(**conditions)
+
+
+def search_inspector_bugs(**conditions):
+    conditions['project_names'] = ('ironic-inspector',
+                                   'python-ironic-inspector-client')
+    return search_bugs(**conditions)

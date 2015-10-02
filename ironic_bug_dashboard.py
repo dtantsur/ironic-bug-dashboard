@@ -4,7 +4,7 @@ import sys
 from flask import Flask
 import jinja2
 
-from simple_lp import search_bugs, search_nova_bugs, OPEN_STATUSES
+import simple_lp
 
 
 LOG = logging.getLogger(__name__)
@@ -25,7 +25,12 @@ def search_in_cache(cache, status=None, importance=None):
         yield bug
 
 
-TRIAGED_STATUSES = OPEN_STATUSES - {'New', 'Incomplete'}
+PRIORITY_REQUIRED_STATUSES = simple_lp.OPEN_STATUSES - {'Incomplete'}
+STATUS_PRIORITIES = {
+    'In Progress': -10,
+    'Triaged': -5,
+    'Confirmed': -5
+}
 
 
 @app.route("/")
@@ -33,13 +38,16 @@ def index():
     LOG.debug('updating bugs')
     ironic_bugs = {}
     nova_bugs = {}
+    inspector_bugs = {}
 
-    ironic_bugs['all'] = list(search_bugs())
+    ironic_bugs['all'] = list(simple_lp.search_bugs())
     LOG.debug('%d ironic bugs', len(ironic_bugs['all']))
-    nova_bugs['all'] = list(search_nova_bugs())
+    nova_bugs['all'] = list(simple_lp.search_nova_bugs())
     LOG.debug('%d nova bugs', len(nova_bugs['all']))
+    inspector_bugs['all'] = list(simple_lp.search_inspector_bugs())
+    LOG.debug('%d inspector bugs', len(inspector_bugs['all']))
 
-    for d in (ironic_bugs, nova_bugs):
+    for d in (ironic_bugs, nova_bugs, inspector_bugs):
         for status in ('New', 'Incomplete', 'In Progress'):
             d[status] = list(search_in_cache(d, status=status))
         for importance in ('High', 'Critical'):
@@ -48,7 +56,14 @@ def index():
 
     ironic_undecided = search_in_cache(ironic_bugs,
                                        importance='Undecided',
-                                       status=TRIAGED_STATUSES)
+                                       status=PRIORITY_REQUIRED_STATUSES)
+
+    inspector_undecided = search_in_cache(inspector_bugs,
+                                          importance='Undecided',
+                                          status=PRIORITY_REQUIRED_STATUSES)
+    undecided = list(ironic_undecided) + list(inspector_undecided)
+    undecided.sort(key=lambda b: (STATUS_PRIORITIES.get(b['status'], 0),
+                                  b['date_created']))
 
     ironic_new_confirmed = search_in_cache(ironic_bugs,
                                            status=['New', 'Confirmed'])
@@ -70,8 +85,9 @@ def index():
     stats = TEMPLATE.render(
         ironic_bugs=ironic_bugs,
         nova_bugs=nova_bugs,
+        inspector_bugs=inspector_bugs,
         new_or_confirmed=new_or_confirmed,
-        undecided=ironic_undecided,
+        undecided=undecided,
         users=users,
         unassigned_in_progress=unassigned_in_progress,
     )
@@ -122,10 +138,15 @@ Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
 {{ nova_bugs['Critical'] | length }} critical,
 {{ nova_bugs['High'] | length }} high</p>
 
+<p>Inspector bugs: {{ inspector_bugs['all'] | length }}.
+{{ inspector_bugs['New'] | length }} new,
+{{ inspector_bugs['Critical'] | length }} critical,
+{{ inspector_bugs['High'] | length }} high</p>
+
 <h1>Attention Required</h1>
 
 <h2>Undecided Importance</h2>
-<p>Ironic bugs that have 'Undecided' importance.</p>
+<p>Ironic and Inspector bugs that have 'Undecided' importance.</p>
 <ul>
 {% for bug in undecided %}
 {{ render_bug(bug) }}
