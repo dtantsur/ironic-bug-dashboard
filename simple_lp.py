@@ -3,7 +3,8 @@ import itertools
 import requests
 
 
-PROJECT_NAMES = ('ironic', 'python-ironicclient', 'ironic-lib')
+PROJECT_NAMES = ('ironic', 'python-ironicclient', 'ironic-lib',
+                 'ironic-python-agent')
 OPEN_STATUSES = set(['New', 'In Progress', 'Triaged', 'Confirmed',
                      'Incomplete'])
 
