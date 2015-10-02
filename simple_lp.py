@@ -66,8 +66,13 @@ def search_bugs(**conditions):
     conditions.setdefault('status', OPEN_STATUSES)
     conditions['ws.op'] = 'searchTasks'
     project_names = conditions.pop('project_names', PROJECT_NAMES)
-    return IterableWithLength(Collection(PROJECT_TEMPLATE % p, conditions)
-                              for p in project_names)
+    for bug in IterableWithLength(Collection(PROJECT_TEMPLATE % p, conditions)
+                                  for p in project_names):
+        if bug['assignee_link'] is not None:
+            bug['assignee'] = bug['assignee_link'].split('~')[1]
+        else:
+            bug['assignee'] = None
+        yield bug
 
 
 def search_nova_bugs(**conditions):

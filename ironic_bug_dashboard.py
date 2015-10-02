@@ -2,6 +2,7 @@ import logging
 import sys
 
 from flask import Flask
+import jinja2
 
 from simple_lp import search_bugs, search_nova_bugs, OPEN_STATUSES
 
@@ -9,85 +10,7 @@ from simple_lp import search_bugs, search_nova_bugs, OPEN_STATUSES
 LOG = logging.getLogger(__name__)
 
 
-HEADER = unicode("""<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet"
-href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-<link rel="stylesheet"
-href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-<title>Ironic Bug Dashboard</title>
-</head>
-<body>
-<div class="container">""")
-
-
-STATS_TEMPLATE = unicode(
-    "<h1>Stats</h1>"
-    "<p>Open: {total}. {new} new, {progress} in progress, "
-    "{critical} critical, {high} high and {incomplete} incomplete</p>"
-    "<p><a href=\"https://bugs.launchpad.net/nova/+bugs?field.tag=ironic\">"
-    "Nova bugs with Ironic tag</a>: {nova_total}. {nova_new} new, "
-    "{nova_critical} critical, {nova_high} high</p>"
-    "<h2>Undecided Importance</h2>"
-    "<p>Ironic bugs that have 'Undecided' importance, but have status "
-    "other than 'New' or 'Incomplete'.</p>"
-    "<ul>{undecided_bugs_html}</ul>"
-    "<h2>Unassigned In Progress</h2>"
-    "<p>Ironic bugs that have 'In Progress' status, but don't have "
-    "an assignee.</p>"
-    "<ul>{unassigned_in_progress}</ul>"
-    "<h2>New and Confirmed Bugs</h2>"
-    "<p>Ironic and Nova bugs that have 'New' or 'Confirmed' status.</p>"
-    "<ul>{new_bugs_html}</ul>"
-    "<h2>In Progress Bugs</h2>"
-    "{assigned_bugs_html}"
-)
-
-
-FOOTER = unicode(
-    "<br><br>"  # Being a cool frontend developer
-    "<p><a href=\"https://github.com/dtantsur/ironic-bug-dashboard\">"
-    "Source code, pull requests, suggestions"
-    "</a></p>"
-    "</div></body></html>"
-)
-
-
-STATS_TEMPLATE = HEADER + STATS_TEMPLATE + FOOTER
-
-
-BUG_TEMPLATE = unicode(
-    "<li>"
-    "{bug[status]} <a href=\"{bug[web_link]}\">{bug[title]}</a><br>"
-    "created on {bug[date_created]}"
-)
-
-
-ASSIGNEE_TEMPLATE = unicode(
-    u" assigned to "
-    u"<a href=\"https://launchpad.net/~{assignee}\">~{assignee}</a>"
-)
-
-
 app = Flask(__name__)
-
-
-def format_bug(bug, with_assignee=True):
-    result = BUG_TEMPLATE.format(bug=bug)
-    if with_assignee and bug['assignee_link'] is not None:
-        assignee = bug['assignee_link'].split('~')[1]
-        result += ASSIGNEE_TEMPLATE.format(bug=bug,
-                                           assignee=assignee)
-    return result
-
-
-def format_bugs(bugs, with_assignee=True):
-    return ''.join(format_bug(bug, with_assignee=with_assignee)
-                   for bug in bugs)
 
 
 def search_in_cache(cache, status=None, importance=None):
@@ -138,36 +61,114 @@ def index():
     users = {}
     unassigned_in_progress = []
     for bug in ironic_bugs['In Progress']:
-        assignee = (bug['assignee_link'].split('~')[1]
-                    if bug['assignee_link'] is not None else '')
+        assignee = bug['assignee']
         if assignee:
             users.setdefault(assignee, []).append(bug)
         else:
             unassigned_in_progress.append(bug)
-    assigned_bugs_html = ''.join(
-        u'<h3>{assignee}</h3><ul>{bugs}</ul>'.format(
-            assignee=assignee,
-            bugs=format_bugs(bugs, False)
-        )
-        for (assignee, bugs) in sorted(users.items(), key=lambda x: x[1]))
 
-    stats = STATS_TEMPLATE.format(
-        total=len(ironic_bugs['all']),
-        new=len(ironic_bugs['New']),
-        progress=len(ironic_bugs['In Progress']),
-        critical=len(ironic_bugs['Critical']),
-        high=len(ironic_bugs['High']),
-        incomplete=len(ironic_bugs['Incomplete']),
-        nova_new=len(nova_bugs['New']),
-        nova_total=len(nova_bugs['all']),
-        nova_critical=len(nova_bugs['Critical']),
-        nova_high=len(nova_bugs['High']),
-        new_bugs_html=format_bugs(new_or_confirmed),
-        undecided_bugs_html=format_bugs(ironic_undecided),
-        assigned_bugs_html=assigned_bugs_html,
-        unassigned_in_progress=format_bugs(unassigned_in_progress),
+    stats = TEMPLATE.render(
+        ironic_bugs=ironic_bugs,
+        nova_bugs=nova_bugs,
+        new_or_confirmed=new_or_confirmed,
+        undecided=ironic_undecided,
+        users=users,
+        unassigned_in_progress=unassigned_in_progress,
     )
     return stats
+
+
+TEMPLATE = u"""
+{%- macro render_bug(bug) -%}
+<li>{{ bug.status }} <a href="{{ bug.web_link }}">{{ bug.title }}</a><br>
+created on {{ bug.date_created }}
+{% if bug.assignee %}
+assigned to <a href="https://launchpad.net/~{{ bug.assignee }}">
+~{{ bug.assignee }}</a>
+{% endif %}
+{%- endmacro -%}
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet"
+href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+<link rel="stylesheet"
+href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+<style>
+h1 {text-align: center;}
+</style>
+<title>Ironic Bug Dashboard</title>
+</head>
+<body>
+<div class="container">
+<hr>
+
+<h1>Stats</h1>
+
+<p>Open: {{ ironic_bugs['all'] | length }}.
+{{ ironic_bugs['New'] | length }} new,
+{{ ironic_bugs['In Progress'] | length }} in progress,
+{{ ironic_bugs['Critical'] | length }} critical,
+{{ ironic_bugs['High'] | length }} high and
+{{ ironic_bugs['Incomplete'] | length }} incomplete</p>
+
+<p><a href="https://bugs.launchpad.net/nova/+bugs?field.tag=ironic">
+Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
+{{ nova_bugs['New'] | length }} new,
+{{ nova_bugs['Critical'] | length }} critical,
+{{ nova_bugs['High'] | length }} high</p>
+
+<h1>Attention Required</h1>
+
+<h2>Undecided Importance</h2>
+<p>Ironic bugs that have 'Undecided' importance.</p>
+<ul>
+{% for bug in undecided %}
+{{ render_bug(bug) }}
+{% endfor %}
+</ul>
+
+<h2>Unassigned In Progress</h2>
+<p>Ironic bugs that have 'In Progress' status, but don't have an assignee.</p>
+<ul>
+{% for bug in unassigned_in_progress %}
+{{ render_bug(bug) }}
+{% endfor %}
+</ul>
+
+<hr>
+<h1>Triaging Required</h1>
+
+<p>Ironic and Nova bugs that have 'New' or 'Confirmed' status.</p>
+<ul>
+{% for bug in new_or_confirmed %}
+{{ render_bug(bug) }}
+{% endfor %}
+</ul>
+
+<h1>In Progress Bugs</h1>
+{% for user, bugs in users | dictsort %}
+<h3>{{ user }}</h3>
+<ul>
+{% for bug in bugs %}
+{{ render_bug(bug) }}
+{% endfor %}
+</ul>
+{% endfor %}
+
+<hr>
+<p><a href="https://github.com/dtantsur/ironic-bug-dashboard">
+Source code, pull requests, suggestions
+</a></p>
+</div></body></html>
+"""
+
+
+TEMPLATE = jinja2.Template(TEMPLATE)
 
 
 if __name__ == '__main__':
