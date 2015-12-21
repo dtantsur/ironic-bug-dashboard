@@ -50,9 +50,12 @@ def index():
     for d in (ironic_bugs, nova_bugs, inspector_bugs):
         for status in ('New', 'Incomplete', 'In Progress'):
             d[status] = list(search_in_cache(d, status=status))
-        for importance in ('High', 'Critical'):
+        for importance in ('High', 'Critical', 'Wishlist'):
             d[importance] = list(search_in_cache(
                 d, importance=importance))
+
+    for d in (ironic_bugs, inspector_bugs):
+        d['all'] = [x for x in d['all'] if x['importance'] != 'Wishlist']
 
     ironic_undecided = search_in_cache(ironic_bugs,
                                        importance='Undecided',
@@ -125,23 +128,27 @@ h1 {text-align: center;}
 
 <h1>Stats</h1>
 
-<p>Open: {{ ironic_bugs['all'] | length }}.
+<p>Ironic: {{ ironic_bugs['all'] | length }} bugs +
+{{ ironic_bugs['Wishlist'] | length }} wishlist items.
 {{ ironic_bugs['New'] | length }} new,
 {{ ironic_bugs['In Progress'] | length }} in progress,
 {{ ironic_bugs['Critical'] | length }} critical,
 {{ ironic_bugs['High'] | length }} high and
 {{ ironic_bugs['Incomplete'] | length }} incomplete</p>
 
+<p>Inspector: {{ inspector_bugs['all'] | length }} bugs +
+{{ inspector_bugs['Wishlist'] | length }} wishlist items.
+{{ inspector_bugs['New'] | length }} new,
+{{ inspector_bugs['In Progress'] | length }} in progress,
+{{ inspector_bugs['Critical'] | length }} critical,
+{{ inspector_bugs['High'] | length }} high and
+{{ inspector_bugs['Incomplete'] | length }} incomplete</p>
+
 <p><a href="https://bugs.launchpad.net/nova/+bugs?field.tag=ironic">
 Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
 {{ nova_bugs['New'] | length }} new,
 {{ nova_bugs['Critical'] | length }} critical,
 {{ nova_bugs['High'] | length }} high</p>
-
-<p>Inspector bugs: {{ inspector_bugs['all'] | length }}.
-{{ inspector_bugs['New'] | length }} new,
-{{ inspector_bugs['Critical'] | length }} critical,
-{{ inspector_bugs['High'] | length }} high</p>
 
 <h1>Attention Required</h1>
 
