@@ -65,6 +65,7 @@ class Collection(object):
 def search_bugs(**conditions):
     conditions.setdefault('status', OPEN_STATUSES)
     conditions['ws.op'] = 'searchTasks'
+    conditions['ws.size'] = '300'
     project_names = conditions.pop('project_names', PROJECT_NAMES)
     for bug in IterableWithLength(Collection(PROJECT_TEMPLATE % p, conditions)
                                   for p in project_names):
