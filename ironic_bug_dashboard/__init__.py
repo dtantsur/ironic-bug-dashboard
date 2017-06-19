@@ -206,7 +206,7 @@ Source code, pull requests, suggestions
 TEMPLATE = jinja2.Template(TEMPLATE)
 
 
-if __name__ == '__main__':
+def main():
     try:
         debug = sys.argv[1] == '--debug'
     except IndexError:
