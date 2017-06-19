@@ -40,11 +40,18 @@ def index():
     nova_bugs = {}
     inspector_bugs = {}
 
-    ironic_bugs['all'] = list(simple_lp.search_bugs())
+    bugs = simple_lp.fetch_all()
+    ironic_bugs['all'] = []
+    for project in simple_lp.IRONIC_PROJECTS:
+        ironic_bugs['all'].extend(bugs[project])
     LOG.debug('%d ironic bugs', len(ironic_bugs['all']))
-    nova_bugs['all'] = list(simple_lp.search_nova_bugs())
+
+    nova_bugs['all'] = bugs['nova']
     LOG.debug('%d nova bugs', len(nova_bugs['all']))
-    inspector_bugs['all'] = list(simple_lp.search_inspector_bugs())
+
+    inspector_bugs['all'] = []
+    for project in simple_lp.INSPECTOR_PROJECTS:
+        inspector_bugs['all'].extend(bugs[project])
     LOG.debug('%d inspector bugs', len(inspector_bugs['all']))
 
     for d in (ironic_bugs, nova_bugs, inspector_bugs):

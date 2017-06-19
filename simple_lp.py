@@ -1,10 +1,13 @@
 import itertools
+import multiprocessing
 
 import requests
 
 
-PROJECT_NAMES = ('ironic', 'python-ironicclient', 'ironic-lib',
-                 'ironic-python-agent')
+IRONIC_PROJECTS = ('ironic', 'python-ironicclient', 'ironic-lib',
+                   'ironic-python-agent')
+INSPECTOR_PROJECTS = ('ironic-inspector', 'python-ironic-inspector-client')
+
 OPEN_STATUSES = set(['New', 'In Progress', 'Triaged', 'Confirmed',
                      'Incomplete'])
 
@@ -62,13 +65,11 @@ class Collection(object):
         return self.result['total_size']
 
 
-def search_bugs(**conditions):
+def search_bugs(project_name, **conditions):
     conditions.setdefault('status', OPEN_STATUSES)
     conditions['ws.op'] = 'searchTasks'
     conditions['ws.size'] = '300'
-    project_names = conditions.pop('project_names', PROJECT_NAMES)
-    for bug in IterableWithLength(Collection(PROJECT_TEMPLATE % p, conditions)
-                                  for p in project_names):
+    for bug in Collection(PROJECT_TEMPLATE % project_name, conditions):
         if bug['assignee_link'] is not None:
             bug['assignee'] = bug['assignee_link'].split('~')[1]
         else:
@@ -76,13 +77,19 @@ def search_bugs(**conditions):
         yield bug
 
 
-def search_nova_bugs(**conditions):
-    conditions['project_names'] = ('nova',)
-    conditions['tags'] = 'ironic'
-    return search_bugs(**conditions)
+def _fetch_bugs(conditions):
+    return list(search_bugs(**conditions))
 
 
-def search_inspector_bugs(**conditions):
-    conditions['project_names'] = ('ironic-inspector',
-                                   'python-ironic-inspector-client')
-    return search_bugs(**conditions)
+def fetch_all():
+    keys = IRONIC_PROJECTS + INSPECTOR_PROJECTS + ('nova',)
+    conditions = [{'project_name': project}
+                  for project in IRONIC_PROJECTS + INSPECTOR_PROJECTS]
+    conditions.append({'project_name': 'nova', 'tags': 'ironic'})
+
+    pool = multiprocessing.Pool()
+    try:
+        values = pool.map(_fetch_bugs, conditions)
+    finally:
+        pool.close()
+    return dict(zip(keys, values))
