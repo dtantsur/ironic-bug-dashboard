@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 
 from flask import Flask
@@ -92,7 +93,12 @@ def index():
         else:
             unassigned_in_progress.append(bug)
 
-    stats = TEMPLATE.render(
+    tpl_dir = os.path.dirname(os.path.realpath(__file__))
+    tpl_file = os.path.join(tpl_dir, 'template.html')
+    with open(tpl_file) as fp:
+        template = jinja2.Template(fp.read())
+
+    stats = template.render(
         ironic_bugs=ironic_bugs,
         nova_bugs=nova_bugs,
         inspector_bugs=inspector_bugs,
@@ -102,108 +108,6 @@ def index():
         unassigned_in_progress=unassigned_in_progress,
     )
     return stats
-
-
-TEMPLATE = u"""
-{%- macro render_bug(bug) -%}
-<li>{{ bug.status }} <a href="{{ bug.web_link }}">{{ bug.title }}</a><br>
-created on {{ bug.date_created }}
-{% if bug.assignee %}
-assigned to <a href="https://launchpad.net/~{{ bug.assignee }}">
-~{{ bug.assignee }}</a>
-{% endif %}
-{%- endmacro -%}
-
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet"
-href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
-<link rel="stylesheet"
-href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
-<style>
-h1 {text-align: center;}
-</style>
-<title>Ironic Bug Dashboard</title>
-</head>
-<body>
-<div class="container">
-<hr>
-
-<h1>Stats</h1>
-
-<p>Ironic: {{ ironic_bugs['all'] | length }} bugs +
-{{ ironic_bugs['Wishlist'] | length }} wishlist items.
-{{ ironic_bugs['New'] | length }} new,
-{{ ironic_bugs['In Progress'] | length }} in progress,
-{{ ironic_bugs['Critical'] | length }} critical,
-{{ ironic_bugs['High'] | length }} high and
-{{ ironic_bugs['Incomplete'] | length }} incomplete</p>
-
-<p>Inspector: {{ inspector_bugs['all'] | length }} bugs +
-{{ inspector_bugs['Wishlist'] | length }} wishlist items.
-{{ inspector_bugs['New'] | length }} new,
-{{ inspector_bugs['In Progress'] | length }} in progress,
-{{ inspector_bugs['Critical'] | length }} critical,
-{{ inspector_bugs['High'] | length }} high and
-{{ inspector_bugs['Incomplete'] | length }} incomplete</p>
-
-<p><a href="https://bugs.launchpad.net/nova/+bugs?field.tag=ironic">
-Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
-{{ nova_bugs['New'] | length }} new,
-{{ nova_bugs['Critical'] | length }} critical,
-{{ nova_bugs['High'] | length }} high</p>
-
-<h1>Attention Required</h1>
-
-<h2>Undecided Importance</h2>
-<p>Ironic and Inspector bugs that have 'Undecided' importance.</p>
-<ul>
-{% for bug in undecided %}
-{{ render_bug(bug) }}
-{% endfor %}
-</ul>
-
-<h2>Unassigned In Progress</h2>
-<p>Ironic bugs that have 'In Progress' status, but don't have an assignee.</p>
-<ul>
-{% for bug in unassigned_in_progress %}
-{{ render_bug(bug) }}
-{% endfor %}
-</ul>
-
-<hr>
-<h1>Triaging Required</h1>
-
-<p>Ironic and Nova bugs that have 'New' or 'Confirmed' status.</p>
-<ul>
-{% for bug in new_or_confirmed %}
-{{ render_bug(bug) }}
-{% endfor %}
-</ul>
-
-<h1>In Progress Bugs</h1>
-{% for user, bugs in users | dictsort %}
-<h3>{{ user }}</h3>
-<ul>
-{% for bug in bugs %}
-{{ render_bug(bug) }}
-{% endfor %}
-</ul>
-{% endfor %}
-
-<hr>
-<p><a href="https://github.com/dtantsur/ironic-bug-dashboard">
-Source code, pull requests, suggestions
-</a></p>
-</div></body></html>
-"""
-
-
-TEMPLATE = jinja2.Template(TEMPLATE)
 
 
 def main():
