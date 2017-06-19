@@ -5,7 +5,7 @@ import requests
 
 
 IRONIC_PROJECTS = ('ironic', 'python-ironicclient', 'ironic-lib',
-                   'ironic-python-agent')
+                   'ironic-python-agent', 'sushy')
 INSPECTOR_PROJECTS = ('ironic-inspector', 'python-ironic-inspector-client')
 
 OPEN_STATUSES = set(['New', 'In Progress', 'Triaged', 'Confirmed',
