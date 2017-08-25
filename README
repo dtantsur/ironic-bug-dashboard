@@ -5,7 +5,7 @@ It is a Flask application and can be run as such. For local testing use:
    $ tox -erun
 
 It is also set to run on openshift and actually runs on
-http://ironic-divius.rhcloud.com/
+http://dashboard-ironic.7e14.starter-us-west-2.openshiftapps.com/
 
 Licensed under MIT license as follows:
 
