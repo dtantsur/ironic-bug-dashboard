@@ -1,7 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from ironic_bug_dashboard import app as application  # noqa
+import ironic_bug_dashboard
 
+
+application = ironic_bug_dashboard.app
 
 if __name__ == '__main__':
-    application.run()
+    ironic_bug_dashboard.main()

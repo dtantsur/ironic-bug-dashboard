@@ -5,7 +5,7 @@ import sys
 from flask import Flask
 import jinja2
 
-import simple_lp
+from . import simple_lp
 
 
 LOG = logging.getLogger(__name__)
