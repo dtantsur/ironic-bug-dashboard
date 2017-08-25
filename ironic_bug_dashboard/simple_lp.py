@@ -1,6 +1,6 @@
 import itertools
-import multiprocessing
 
+from eventlet import greenpool
 import requests
 
 
@@ -87,9 +87,5 @@ def fetch_all():
                   for project in IRONIC_PROJECTS + INSPECTOR_PROJECTS]
     conditions.append({'project_name': 'nova', 'tags': 'ironic'})
 
-    pool = multiprocessing.Pool()
-    try:
-        values = pool.map(_fetch_bugs, conditions)
-    finally:
-        pool.close()
+    values = greenpool.GreenPool(size=4).imap(_fetch_bugs, conditions)
     return dict(zip(keys, values))

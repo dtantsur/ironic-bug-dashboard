@@ -2,14 +2,16 @@ import logging
 import os
 import sys
 
+import eventlet
 from flask import Flask
 import jinja2
 
 from . import simple_lp
 
 
-LOG = logging.getLogger(__name__)
+eventlet.monkey_patch()
 
+LOG = logging.getLogger(__name__)
 
 app = Flask(__name__)
 

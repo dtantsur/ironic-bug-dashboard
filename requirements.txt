@@ -1,4 +1,4 @@
-eventlet
+eventlet==0.17.4
 Flask
 gunicorn
 jinja2
