@@ -34,6 +34,11 @@ STATUS_PRIORITIES = {
 }
 
 
+@app.route("/__status")
+def status():
+    return 'OK'
+
+
 @app.route("/")
 def index():
     LOG.debug('updating bugs')
