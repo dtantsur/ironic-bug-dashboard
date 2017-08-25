@@ -120,8 +120,10 @@ def main():
         debug = sys.argv[1] == '--debug'
     except IndexError:
         debug = False
-    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(
+        logging.ERROR)
+    logging.getLogger('urllib3.connectionpool').setLevel(
         logging.ERROR)
 
     app.run(debug=debug)
