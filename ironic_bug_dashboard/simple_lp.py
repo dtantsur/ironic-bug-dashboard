@@ -13,6 +13,8 @@ OPEN_STATUSES = set(['New', 'In Progress', 'Triaged', 'Confirmed',
 
 PROJECT_TEMPLATE = 'https://api.launchpad.net/1.0/%s'
 
+DEFAULT_SIZE = 100
+
 
 def get_json(url, params):
     result = requests.get(url, params=params)
@@ -68,7 +70,7 @@ class Collection(object):
 def search_bugs(project_name, **conditions):
     conditions.setdefault('status', OPEN_STATUSES)
     conditions['ws.op'] = 'searchTasks'
-    conditions['ws.size'] = '300'
+    conditions['ws.size'] = str(DEFAULT_SIZE)
     for bug in Collection(PROJECT_TEMPLATE % project_name, conditions):
         if bug['assignee_link'] is not None:
             bug['assignee'] = bug['assignee_link'].split('~')[1]
