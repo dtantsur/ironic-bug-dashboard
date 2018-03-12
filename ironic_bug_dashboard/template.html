@@ -69,6 +69,13 @@ Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
 {% endfor %}
 </ul>
 
+<h2>Critical Bugs</h2>
+<ul>
+{% for bug in critical_bugs %}
+{{ render_bug(bug) }}
+{% endfor %}
+</ul>
+
 <hr>
 <h1>Triaging Required</h1>
 

@@ -62,12 +62,15 @@ def index():
         inspector_bugs['all'].extend(bugs[project])
     LOG.debug('%d inspector bugs', len(inspector_bugs['all']))
 
+    critical_bugs = []
     for d in (ironic_bugs, nova_bugs, inspector_bugs):
         for status in ('New', 'Incomplete', 'In Progress'):
             d[status] = list(search_in_cache(d, status=status))
         for importance in ('High', 'Critical', 'Wishlist'):
             d[importance] = list(search_in_cache(
                 d, importance=importance))
+            if importance == 'Critical':
+                critical_bugs.extend(d[importance])
 
     for d in (ironic_bugs, inspector_bugs):
         d['all'] = [x for x in d['all'] if x['importance'] != 'Wishlist']
@@ -113,6 +116,7 @@ def index():
         undecided=undecided,
         users=users,
         unassigned_in_progress=unassigned_in_progress,
+        critical_bugs=critical_bugs,
     )
     return stats
 
