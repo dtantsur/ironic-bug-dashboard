@@ -2,14 +2,11 @@ import logging
 import os
 import sys
 
-import eventlet
 from flask import Flask
 import jinja2
 
 from . import simple_lp
 
-
-eventlet.monkey_patch()
 
 LOG = logging.getLogger(__name__)
 
@@ -49,16 +46,24 @@ def index():
     inspector_bugs = {}
 
     bugs = simple_lp.fetch_all()
+
     ironic_bugs['all'] = []
     for project in simple_lp.IRONIC_PROJECTS:
+        if project not in bugs:
+            continue
         ironic_bugs['all'].extend(bugs[project])
     LOG.debug('%d ironic bugs', len(ironic_bugs['all']))
 
-    nova_bugs['all'] = bugs['nova']
+    if 'nova' in bugs:
+        nova_bugs['all'] = bugs['nova']
+    else:
+        nova_bugs['all'] = []
     LOG.debug('%d nova bugs', len(nova_bugs['all']))
 
     inspector_bugs['all'] = []
     for project in simple_lp.INSPECTOR_PROJECTS:
+        if project not in bugs:
+            continue
         inspector_bugs['all'].extend(bugs[project])
     LOG.debug('%d inspector bugs', len(inspector_bugs['all']))
 

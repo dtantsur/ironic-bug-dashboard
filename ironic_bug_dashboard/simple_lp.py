@@ -1,12 +1,11 @@
 import itertools
 
-from eventlet import greenpool
 import requests
 
 
 IRONIC_PROJECTS = ('ironic', 'python-ironicclient', 'ironic-lib',
                    'ironic-python-agent', 'sushy', 'networking-baremetal',
-                   'virtualbmc')
+                   'virtualbmc', 'virtualpdu')
 INSPECTOR_PROJECTS = ('ironic-inspector', 'python-ironic-inspector-client')
 
 OPEN_STATUSES = set(['New', 'In Progress', 'Triaged', 'Confirmed',
@@ -18,7 +17,7 @@ DEFAULT_SIZE = 100
 
 
 def get_json(url, params):
-    result = requests.get(url, params=params)
+    result = requests.get(url, params=dict(params), timeout=600)
     result.raise_for_status()
     return result.json()
 
@@ -72,11 +71,13 @@ def search_bugs(project_name, **conditions):
     conditions.setdefault('status', OPEN_STATUSES)
     conditions['ws.op'] = 'searchTasks'
     conditions['ws.size'] = str(DEFAULT_SIZE)
+
     for bug in Collection(PROJECT_TEMPLATE % project_name, conditions):
         if bug['assignee_link'] is not None:
             bug['assignee'] = bug['assignee_link'].split('~')[1]
         else:
             bug['assignee'] = None
+
         yield bug
 
 
@@ -90,5 +91,6 @@ def fetch_all():
                   for project in IRONIC_PROJECTS + INSPECTOR_PROJECTS]
     conditions.append({'project_name': 'nova', 'tags': 'ironic'})
 
-    values = greenpool.GreenPool(size=4).imap(_fetch_bugs, conditions)
+    values = map(_fetch_bugs, conditions)
+
     return dict(zip(keys, values))
