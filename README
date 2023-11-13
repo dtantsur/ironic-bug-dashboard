@@ -4,11 +4,7 @@ It is a Flask application and can be run as such. For local testing use:
 
     $ tox -erun
 
-For actual production you may want something like gunicorn:
-
-    $ gunicorn --workers 2 ironic_bug_dashboard:app
-
-A Dockerfile is also provided:
+For actual production, a Dockerfile is provided:
 
     $ podman build -t ironic-bug-dashboard .
     $ podman run --name ironic-bug-dashboard --publish 8000:8000 ironic-bug-dashboard

@@ -1,8 +1,8 @@
 import logging
 import os
-import sys
 
-from flask import Flask
+from aiohttp import web
+import aiohttp_jinja2
 import jinja2
 
 from . import simple_lp
@@ -10,7 +10,9 @@ from . import simple_lp
 
 LOG = logging.getLogger(__name__)
 
-app = Flask(__name__)
+app = web.Application()
+template_path = os.path.dirname(os.path.realpath(__file__))
+aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(template_path))
 
 
 def search_in_cache(cache, status=None, importance=None):
@@ -33,19 +35,14 @@ STATUS_PRIORITIES = {
 }
 
 
-@app.route("/__status")
-def status():
-    return 'OK'
-
-
-@app.route("/")
-def index():
+@aiohttp_jinja2.template('template.html')
+async def index(_request):
     LOG.debug('updating bugs')
     ironic_bugs = {}
     nova_bugs = {}
     inspector_bugs = {}
 
-    bugs = simple_lp.fetch_all()
+    bugs = await simple_lp.fetch_all()
 
     ironic_bugs['all'] = []
     for project in simple_lp.IRONIC_PROJECTS:
@@ -108,12 +105,7 @@ def index():
         else:
             unassigned_in_progress.append(bug)
 
-    tpl_dir = os.path.dirname(os.path.realpath(__file__))
-    tpl_file = os.path.join(tpl_dir, 'template.html')
-    with open(tpl_file) as fp:
-        template = jinja2.Template(fp.read())
-
-    stats = template.render(
+    return dict(
         ironic_bugs=ironic_bugs,
         nova_bugs=nova_bugs,
         inspector_bugs=inspector_bugs,
@@ -123,18 +115,14 @@ def index():
         unassigned_in_progress=unassigned_in_progress,
         critical_bugs=critical_bugs,
     )
-    return stats
+
+
+app.router.add_get('/', index)
 
 
 def main():
-    try:
-        debug = sys.argv[1] == '--debug'
-    except IndexError:
-        debug = False
     logging.basicConfig(level=logging.DEBUG)
-    logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(
-        logging.ERROR)
-    logging.getLogger('urllib3.connectionpool').setLevel(
-        logging.ERROR)
-
-    app.run(debug=debug)
+    try:
+        web.run_app(app, host='127.0.0.1', port=8000)
+    except KeyboardInterrupt:
+        pass
