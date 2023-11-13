@@ -1,4 +1,11 @@
+import asyncio
+import logging
+import time
+
 import aiohttp
+
+
+LOG = logging.getLogger(__name__)
 
 
 IRONIC_PROJECTS = ('ironic', 'python-ironicclient', 'ironic-lib',
@@ -30,6 +37,7 @@ async def search_bugs(session, project_name, **conditions):
 
     result = []
     while url:
+        LOG.debug('Fetching %s from %s', params, url)
         async with session.get(url, params=params) as resp:
             raw_result = await resp.json()
 
@@ -57,3 +65,20 @@ async def fetch_all():
         values = [await search_bugs(session, **c) for c in conditions]
 
     return dict(zip(keys, values))
+
+
+class Cache:
+
+    TIMEOUT = 5
+    _update_after = 0
+
+    def __init__(self):
+        self._lock = asyncio.Lock()
+
+    async def fetch(self):
+        async with self._lock:
+            if self._update_after < time.time():
+                LOG.debug('updating bugs from launchpad')
+                self._cache = await fetch_all()
+                self._update_after = time.time() + self.TIMEOUT
+            return self._cache

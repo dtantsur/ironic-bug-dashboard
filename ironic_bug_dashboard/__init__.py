@@ -15,11 +15,11 @@ template_path = os.path.dirname(os.path.realpath(__file__))
 aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(template_path))
 
 
-def search_in_cache(cache, status=None, importance=None):
+def search_in_results(results, status=None, importance=None):
     if isinstance(status, str):
         status = (status,)
 
-    for bug in cache['all']:
+    for bug in results['all']:
         if status is not None and bug['status'] not in status:
             continue
         if importance is not None and bug['importance'] != importance:
@@ -36,13 +36,12 @@ STATUS_PRIORITIES = {
 
 
 @aiohttp_jinja2.template('template.html')
-async def index(_request):
-    LOG.debug('updating bugs')
+async def index(request):
     ironic_bugs = {}
     nova_bugs = {}
     inspector_bugs = {}
 
-    bugs = await simple_lp.fetch_all()
+    bugs = await request.app['lp_cache'].fetch()
 
     ironic_bugs['all'] = []
     for project in simple_lp.IRONIC_PROJECTS:
@@ -67,9 +66,9 @@ async def index(_request):
     critical_bugs = []
     for d in (ironic_bugs, nova_bugs, inspector_bugs):
         for status in ('New', 'Incomplete', 'In Progress'):
-            d[status] = list(search_in_cache(d, status=status))
+            d[status] = list(search_in_results(d, status=status))
         for importance in ('High', 'Critical', 'Wishlist'):
-            d[importance] = list(search_in_cache(
+            d[importance] = list(search_in_results(
                 d, importance=importance))
             if importance == 'Critical':
                 critical_bugs.extend(d[importance])
@@ -77,21 +76,21 @@ async def index(_request):
     for d in (ironic_bugs, inspector_bugs):
         d['all'] = [x for x in d['all'] if x['importance'] != 'Wishlist']
 
-    ironic_undecided = search_in_cache(ironic_bugs,
-                                       importance='Undecided',
-                                       status=PRIORITY_REQUIRED_STATUSES)
+    ironic_undecided = search_in_results(ironic_bugs,
+                                         importance='Undecided',
+                                         status=PRIORITY_REQUIRED_STATUSES)
 
-    inspector_undecided = search_in_cache(inspector_bugs,
-                                          importance='Undecided',
-                                          status=PRIORITY_REQUIRED_STATUSES)
+    inspector_undecided = search_in_results(inspector_bugs,
+                                            importance='Undecided',
+                                            status=PRIORITY_REQUIRED_STATUSES)
     undecided = list(ironic_undecided) + list(inspector_undecided)
     undecided.sort(key=lambda b: (STATUS_PRIORITIES.get(b['status'], 0),
                                   b['date_created']))
 
-    ironic_new_confirmed = search_in_cache(ironic_bugs,
+    ironic_new_confirmed = search_in_results(ironic_bugs,
+                                             status=['New', 'Confirmed'])
+    nova_new_confirmed = search_in_results(nova_bugs,
                                            status=['New', 'Confirmed'])
-    nova_new_confirmed = search_in_cache(nova_bugs,
-                                         status=['New', 'Confirmed'])
     new_or_confirmed = list(ironic_new_confirmed) + list(nova_new_confirmed)
     new_or_confirmed.sort(key=lambda b: (b['status'] != 'New',
                                          b['date_created']))
@@ -118,6 +117,7 @@ async def index(_request):
 
 
 app.router.add_get('/', index)
+app['lp_cache'] = simple_lp.Cache()
 
 
 def main():
