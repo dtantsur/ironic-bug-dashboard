@@ -16,6 +16,7 @@ aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(template_path))
 
 
 def search_in_results(results, status=None, importance=None):
+    result = []
     if isinstance(status, str):
         status = (status,)
 
@@ -24,7 +25,9 @@ def search_in_results(results, status=None, importance=None):
             continue
         if importance is not None and bug['importance'] != importance:
             continue
-        yield bug
+        result.append(bug)
+
+    return result
 
 
 PRIORITY_REQUIRED_STATUSES = simple_lp.OPEN_STATUSES - {'Incomplete'}
@@ -39,7 +42,6 @@ STATUS_PRIORITIES = {
 async def index(request):
     ironic_bugs = {}
     nova_bugs = {}
-    inspector_bugs = {}
 
     bugs = await request.app['lp_cache'].fetch()
 
@@ -50,21 +52,11 @@ async def index(request):
         ironic_bugs['all'].extend(bugs[project])
     LOG.debug('%d ironic bugs', len(ironic_bugs['all']))
 
-    if 'nova' in bugs:
-        nova_bugs['all'] = bugs['nova']
-    else:
-        nova_bugs['all'] = []
+    nova_bugs['all'] = bugs.get('nova', [])
     LOG.debug('%d nova bugs', len(nova_bugs['all']))
 
-    inspector_bugs['all'] = []
-    for project in simple_lp.INSPECTOR_PROJECTS:
-        if project not in bugs:
-            continue
-        inspector_bugs['all'].extend(bugs[project])
-    LOG.debug('%d inspector bugs', len(inspector_bugs['all']))
-
     critical_bugs = []
-    for d in (ironic_bugs, nova_bugs, inspector_bugs):
+    for d in (ironic_bugs, nova_bugs):
         for status in ('New', 'Incomplete', 'In Progress'):
             d[status] = list(search_in_results(d, status=status))
         for importance in ('High', 'Critical', 'Wishlist'):
@@ -73,17 +65,12 @@ async def index(request):
             if importance == 'Critical':
                 critical_bugs.extend(d[importance])
 
-    for d in (ironic_bugs, inspector_bugs):
-        d['all'] = [x for x in d['all'] if x['importance'] != 'Wishlist']
+    ironic_bugs['all'] = [x for x in ironic_bugs['all']
+                          if x['importance'] != 'Wishlist']
 
-    ironic_undecided = search_in_results(ironic_bugs,
-                                         importance='Undecided',
-                                         status=PRIORITY_REQUIRED_STATUSES)
-
-    inspector_undecided = search_in_results(inspector_bugs,
-                                            importance='Undecided',
-                                            status=PRIORITY_REQUIRED_STATUSES)
-    undecided = list(ironic_undecided) + list(inspector_undecided)
+    undecided = search_in_results(ironic_bugs,
+                                  importance='Undecided',
+                                  status=PRIORITY_REQUIRED_STATUSES)
     undecided.sort(key=lambda b: (STATUS_PRIORITIES.get(b['status'], 0),
                                   b['date_created']))
 
@@ -91,7 +78,7 @@ async def index(request):
                                              status=['New', 'Confirmed'])
     nova_new_confirmed = search_in_results(nova_bugs,
                                            status=['New', 'Confirmed'])
-    new_or_confirmed = list(ironic_new_confirmed) + list(nova_new_confirmed)
+    new_or_confirmed = ironic_new_confirmed + nova_new_confirmed
     new_or_confirmed.sort(key=lambda b: (b['status'] != 'New',
                                          b['date_created']))
 
@@ -107,7 +94,6 @@ async def index(request):
     return dict(
         ironic_bugs=ironic_bugs,
         nova_bugs=nova_bugs,
-        inspector_bugs=inspector_bugs,
         new_or_confirmed=new_or_confirmed,
         undecided=undecided,
         users=users,

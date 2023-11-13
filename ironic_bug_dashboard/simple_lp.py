@@ -8,10 +8,18 @@ import aiohttp
 LOG = logging.getLogger(__name__)
 
 
-IRONIC_PROJECTS = ('ironic', 'python-ironicclient', 'ironic-lib',
-                   'ironic-python-agent', 'sushy', 'networking-baremetal',
-                   'virtualbmc', 'virtualpdu')
-INSPECTOR_PROJECTS = ('ironic-inspector', 'python-ironic-inspector-client')
+IRONIC_PROJECTS = (
+    'ironic',
+    'ironic-inspector',
+    'python-ironicclient',
+    'python-ironic-inspector-client',
+    'ironic-lib',
+    'ironic-python-agent',
+    'sushy',
+    'networking-baremetal',
+    'virtualbmc',
+    'virtualpdu',
+)
 
 OPEN_STATUSES = set(['New', 'In Progress', 'Triaged', 'Confirmed',
                      'Incomplete'])
@@ -59,9 +67,8 @@ async def search_bugs(session, project_name, **conditions):
 
 
 async def fetch_all():
-    keys = IRONIC_PROJECTS + INSPECTOR_PROJECTS + ('nova',)
-    conditions = [{'project_name': project}
-                  for project in IRONIC_PROJECTS + INSPECTOR_PROJECTS]
+    keys = IRONIC_PROJECTS + ('nova',)
+    conditions = [{'project_name': project} for project in IRONIC_PROJECTS]
     conditions.append({'project_name': 'nova', 'tags': 'ironic'})
 
     async with aiohttp.ClientSession(raise_for_status=True) as session:

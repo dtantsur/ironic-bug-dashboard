@@ -37,14 +37,6 @@ assigned to <a href="https://launchpad.net/~{{ bug.assignee }}">
 {{ ironic_bugs['High'] | length }} high and
 {{ ironic_bugs['Incomplete'] | length }} incomplete</p>
 
-<p>Inspector: {{ inspector_bugs['all'] | length }} bugs +
-{{ inspector_bugs['Wishlist'] | length }} wishlist items.
-{{ inspector_bugs['New'] | length }} new,
-{{ inspector_bugs['In Progress'] | length }} in progress,
-{{ inspector_bugs['Critical'] | length }} critical,
-{{ inspector_bugs['High'] | length }} high and
-{{ inspector_bugs['Incomplete'] | length }} incomplete</p>
-
 <p><a href="https://bugs.launchpad.net/nova/+bugs?field.tag=ironic">
 Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
 {{ nova_bugs['New'] | length }} new,
@@ -54,7 +46,7 @@ Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
 <h1>Attention Required</h1>
 
 <h2>Undecided Importance</h2>
-<p>Ironic and Inspector bugs that have 'Undecided' importance.</p>
+<p>Bugs that have 'Undecided' importance. Set importance and mark as 'Triaged'.</p>
 <ul>
 {% for bug in undecided %}
 {{ render_bug(bug) }}
@@ -62,7 +54,7 @@ Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
 </ul>
 
 <h2>Unassigned In Progress</h2>
-<p>Ironic bugs that have 'In Progress' status, but don't have an assignee.</p>
+<p>Bugs that have 'In Progress' status, but don't have an assignee. Update the status.</p>
 <ul>
 {% for bug in unassigned_in_progress %}
 {{ render_bug(bug) }}
@@ -70,6 +62,7 @@ Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
 </ul>
 
 <h2>Critical Bugs</h2>
+<p>Critical bugs must be acted upon soon, or the importance should be lowered.</p>
 <ul>
 {% for bug in critical_bugs %}
 {{ render_bug(bug) }}
