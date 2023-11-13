@@ -20,6 +20,8 @@ PROJECT_TEMPLATE = 'https://api.launchpad.net/1.0/%s'
 
 DEFAULT_SIZE = 100
 
+CONCURRENCY_LIMIT = asyncio.Semaphore(5)
+
 
 async def search_bugs(session, project_name, **conditions):
     conditions.setdefault('status', OPEN_STATUSES)
@@ -37,9 +39,10 @@ async def search_bugs(session, project_name, **conditions):
 
     result = []
     while url:
-        LOG.debug('Fetching %s from %s', params, url)
-        async with session.get(url, params=params) as resp:
-            raw_result = await resp.json()
+        async with CONCURRENCY_LIMIT:
+            LOG.debug('Fetching %s from %s', params, url)
+            async with session.get(url, params=params) as resp:
+                raw_result = await resp.json()
 
         for bug in raw_result['entries']:
             if bug['assignee_link'] is not None:
@@ -62,9 +65,11 @@ async def fetch_all():
     conditions.append({'project_name': 'nova', 'tags': 'ironic'})
 
     async with aiohttp.ClientSession(raise_for_status=True) as session:
-        values = [await search_bugs(session, **c) for c in conditions]
+        async with asyncio.TaskGroup() as tg:
+            tasks = [tg.create_task(search_bugs(session, **c))
+                     for c in conditions]
 
-    return dict(zip(keys, values))
+    return {key: task.result() for key, task in zip(keys, tasks)}
 
 
 class Cache:
