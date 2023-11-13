@@ -9,14 +9,20 @@ LOG = logging.getLogger(__name__)
 
 
 IRONIC_PROJECTS = (
+    'bifrost',
     'ironic',
     'ironic-inspector',
-    'python-ironicclient',
-    'python-ironic-inspector-client',
     'ironic-lib',
+    'ironic-prometheus-exporter',
     'ironic-python-agent',
-    'sushy',
+    'ironic-python-agent-builder',
+    'ironic-ui',
+    'metalsmith',
     'networking-baremetal',
+    'python-ironic-inspector-client',
+    'python-ironicclient',
+    'sushy',
+    'sushy-tools',
     'virtualbmc',
     'virtualpdu',
 )
