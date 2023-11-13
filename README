@@ -8,4 +8,9 @@ For actual production you may want something like gunicorn:
 
     $ gunicorn --workers 2 ironic_bug_dashboard:app
 
+A Dockerfile is also provided:
+
+    $ podman build -t ironic-bug-dashboard .
+    $ podman run --name ironic-bug-dashboard --publish 8000:8000 ironic-bug-dashboard
+
 Licensed under the MIT license.
