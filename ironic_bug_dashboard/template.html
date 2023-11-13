@@ -10,13 +10,20 @@ href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
 <style>
 h1 {text-align: center;}
+.Critical {color: #994455; font-weight: bold;}
+.High {color: #994455;}
+.Medium {color: #997700;}
+.Low {color: #004488;}
+.Wishlist {color: black;}
 </style>
 <title>Ironic Bug Dashboard</title>
 </head>
 <body>
 
 {%- macro render_bug(bug) -%}
-<li>{{ bug.status }} <a href="{{ bug.web_link }}">{{ bug.title }}</a><br>
+<li>
+    <span class="{{ bug.importance }}">{{ bug.status }}</span>
+    <a href="{{ bug.web_link }}">{{ bug.title }}</a><br>
 created on {{ bug.date_created }}
 {% if bug.assignee %}
 assigned to <a href="https://launchpad.net/~{{ bug.assignee }}">
@@ -45,10 +52,19 @@ Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
 
 <h1>Attention Required</h1>
 
-<h2>Undecided Importance</h2>
-<p>Bugs that have 'Undecided' importance. Set importance and mark as 'Triaged'.</p>
+<h2>Critical Bugs</h2>
+<p>Critical bugs must be acted upon soon, or the importance should be lowered.</p>
 <ul>
-{% for bug in undecided %}
+{% for bug in critical_bugs %}
+{{ render_bug(bug) }}
+{% endfor %}
+</ul>
+
+<h2>Triage Needed</h2>
+<p>Bugs that have 'Undecided' importance or status 'New' or 'Confirmed'.
+Set importance and mark as 'Triaged'.</p>
+<ul>
+{% for bug in triage_needed %}
 {{ render_bug(bug) }}
 {% endfor %}
 </ul>
@@ -61,23 +77,7 @@ Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
 {% endfor %}
 </ul>
 
-<h2>Critical Bugs</h2>
-<p>Critical bugs must be acted upon soon, or the importance should be lowered.</p>
-<ul>
-{% for bug in critical_bugs %}
-{{ render_bug(bug) }}
-{% endfor %}
-</ul>
-
 <hr>
-<h1>Triaging Required</h1>
-
-<p>Ironic and Nova bugs that have 'New' or 'Confirmed' status.</p>
-<ul>
-{% for bug in new_or_confirmed %}
-{{ render_bug(bug) }}
-{% endfor %}
-</ul>
 
 <h1>In Progress Bugs</h1>
 {% for user, bugs in users | dictsort %}

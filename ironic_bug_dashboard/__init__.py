@@ -30,6 +30,19 @@ def search_in_results(results, status=None, importance=None):
     return result
 
 
+def dedup(bugs):
+    seen = set()
+    result = []
+    for bug in bugs:
+        if bug['bug_link'] in seen:
+            continue
+
+        result.append(bug)
+        seen.add(bug['bug_link'])
+
+    return result
+
+
 PRIORITY_REQUIRED_STATUSES = simple_lp.OPEN_STATUSES - {'Incomplete'}
 STATUS_PRIORITIES = {
     'In Progress': -10,
@@ -78,9 +91,9 @@ async def index(request):
                                              status=['New', 'Confirmed'])
     nova_new_confirmed = search_in_results(nova_bugs,
                                            status=['New', 'Confirmed'])
-    new_or_confirmed = ironic_new_confirmed + nova_new_confirmed
-    new_or_confirmed.sort(key=lambda b: (b['status'] != 'New',
-                                         b['date_created']))
+    triage_needed = dedup(ironic_new_confirmed + nova_new_confirmed
+                          + undecided)
+    triage_needed.sort(key=lambda b: (b['status'] != 'New', b['date_created']))
 
     users = {}
     unassigned_in_progress = []
@@ -94,8 +107,7 @@ async def index(request):
     return dict(
         ironic_bugs=ironic_bugs,
         nova_bugs=nova_bugs,
-        new_or_confirmed=new_or_confirmed,
-        undecided=undecided,
+        triage_needed=triage_needed,
         users=users,
         unassigned_in_progress=unassigned_in_progress,
         critical_bugs=critical_bugs,
