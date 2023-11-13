@@ -1,12 +1,10 @@
 This is very simple dashboard for tracking outstanding bugs in Ironic.
 
-It is a Flask application and can be run as such. For local testing use:
+It is an AIOHTTP application and can be run as such. For local testing use:
 
     $ tox -erun
 
-For actual production, a Dockerfile is provided:
+For actual production, a Dockerfile is provided that uses gunicorn internally:
 
     $ podman build -t ironic-bug-dashboard .
     $ podman run --name ironic-bug-dashboard --publish 8000:8000 ironic-bug-dashboard
-
-Licensed under the MIT license.
