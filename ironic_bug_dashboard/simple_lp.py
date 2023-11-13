@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import time
 
 import aiohttp
@@ -37,6 +38,24 @@ DEFAULT_SIZE = 100
 CONCURRENCY_LIMIT = asyncio.Semaphore(5)
 
 
+DATE_RE = re.compile(r"(.*)T(.*)\..*\+(.*)")
+
+
+def reformat_date(date):
+    if not date:
+        return date
+
+    m = DATE_RE.match(date)
+    if not m:
+        LOG.warning("%s cannot be parsed as a date", date)
+        return date
+
+    result = f"{m.group(1)} {m.group(2)}"
+    if m.group(3) != "00:00":
+        result = f"{result} UTC+{m.group(3)}"
+    return result
+
+
 async def search_bugs(session, project_name, **conditions):
     conditions.setdefault('status', OPEN_STATUSES)
     conditions['ws.op'] = 'searchTasks'
@@ -63,6 +82,8 @@ async def search_bugs(session, project_name, **conditions):
                 bug['assignee'] = bug['assignee_link'].split('~')[1]
             else:
                 bug['assignee'] = None
+
+            bug['date_created'] = reformat_date(bug['date_created'])
 
             result.append(bug)
 

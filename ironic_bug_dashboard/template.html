@@ -10,6 +10,7 @@ href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
 <style>
 h1 {text-align: center;}
+li {margin-bottom: 0.5rem;}
 .Critical {color: #994455; font-weight: bold;}
 .High {color: #994455;}
 .Medium {color: #997700;}
@@ -21,13 +22,13 @@ h1 {text-align: center;}
 <body>
 
 {%- macro render_bug(bug) -%}
-<li>
-    <span class="{{ bug.importance }}">{{ bug.status }}</span>
-    <a href="{{ bug.web_link }}">{{ bug.title }}</a><br>
+<li><a href="{{ bug.web_link }}">{{ bug.title }}</a><br>
+{{ bug.status }},
+<span class="{{ bug.importance }}">{{ bug.importance }}</span>,
 created on {{ bug.date_created }}
-{% if bug.assignee %}
+{%- if bug.assignee %},
 assigned to <a href="https://launchpad.net/~{{ bug.assignee }}">
-~{{ bug.assignee }}</a>
+{{ bug.assignee }}</a>
 {% endif %}
 {%- endmacro -%}
 
