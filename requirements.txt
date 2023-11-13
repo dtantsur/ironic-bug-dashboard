@@ -1,4 +1,3 @@
 Flask
-gunicorn
 jinja2
 requests

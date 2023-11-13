@@ -2,6 +2,10 @@ This is very simple dashboard for tracking outstanding bugs in Ironic.
 
 It is a Flask application and can be run as such. For local testing use:
 
-   $ tox -erun
+    $ tox -erun
+
+For actual production you may want something like gunicorn:
+
+    $ gunicorn --workers 2 ironic_bug_dashboard:app
 
 Licensed under the MIT license.
