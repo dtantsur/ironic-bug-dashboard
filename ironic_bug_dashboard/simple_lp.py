@@ -8,35 +8,11 @@ import aiohttp
 
 LOG = logging.getLogger(__name__)
 
-
-IRONIC_PROJECTS = (
-    'bifrost',
-    'ironic',
-    'ironic-inspector',
-    'ironic-lib',
-    'ironic-prometheus-exporter',
-    'ironic-python-agent',
-    'ironic-python-agent-builder',
-    'ironic-ui',
-    'metalsmith',
-    'networking-baremetal',
-    'python-ironic-inspector-client',
-    'python-ironicclient',
-    'sushy',
-    'sushy-tools',
-    'virtualbmc',
-    'virtualpdu',
-)
-
-OPEN_STATUSES = set(['New', 'In Progress', 'Triaged', 'Confirmed',
-                     'Incomplete'])
+OPEN_STATUSES = {'New', 'In Progress', 'Triaged', 'Confirmed', 'Incomplete'}
 
 PROJECT_TEMPLATE = 'https://api.launchpad.net/1.0/%s'
 
 DEFAULT_SIZE = 100
-
-CONCURRENCY_LIMIT = asyncio.Semaphore(5)
-
 
 DATE_RE = re.compile(r"(.*)T(.*)\..*\+(.*)")
 
@@ -56,68 +32,105 @@ def reformat_date(date):
     return result
 
 
-async def search_bugs(session, project_name, **conditions):
-    conditions.setdefault('status', OPEN_STATUSES)
-    conditions['ws.op'] = 'searchTasks'
-    conditions['ws.size'] = str(DEFAULT_SIZE)
-
-    url = PROJECT_TEMPLATE % project_name
-    params = []
-    for key, value in conditions.items():
-        if isinstance(value, (list, set)):
-            for item in value:
-                params.append((key, item))
-        else:
-            params.append((key, value))
-
+def search_in_results(results, status=None, importance=None):
     result = []
-    while url:
-        async with CONCURRENCY_LIMIT:
-            LOG.debug('Fetching %s from %s', params, url)
-            async with session.get(url, params=params) as resp:
-                raw_result = await resp.json()
+    if isinstance(status, str):
+        status = (status,)
 
-        for bug in raw_result['entries']:
-            if bug['assignee_link'] is not None:
-                bug['assignee'] = bug['assignee_link'].split('~')[1]
-            else:
-                bug['assignee'] = None
-
-            bug['date_created'] = reformat_date(bug['date_created'])
-
-            result.append(bug)
-
-        url = raw_result.get('next_collection_link')
-        params = []  # the link will contain everything
+    for bug in results['all']:
+        if status is not None and bug['status'] not in status:
+            continue
+        if importance is not None and bug['importance'] != importance:
+            continue
+        result.append(bug)
 
     return result
 
 
-async def fetch_all():
-    keys = IRONIC_PROJECTS + ('nova',)
-    conditions = [{'project_name': project} for project in IRONIC_PROJECTS]
-    conditions.append({'project_name': 'nova', 'tags': 'ironic'})
+def dedup(bugs):
+    seen = set()
+    result = []
+    for bug in bugs:
+        if bug['bug_link'] in seen:
+            continue
 
-    async with aiohttp.ClientSession(raise_for_status=True) as session:
-        async with asyncio.TaskGroup() as tg:
-            tasks = [tg.create_task(search_bugs(session, **c))
-                     for c in conditions]
+        result.append(bug)
+        seen.add(bug['bug_link'])
 
-    return {key: task.result() for key, task in zip(keys, tasks)}
+    return result
 
 
-class Cache:
+class _Client:
 
     TIMEOUT = 5
+    CONCURRENCY_LIMIT = 5
     _update_after = 0
 
-    def __init__(self):
+    def __init__(self, session, projects):
+        self._session = session
         self._lock = asyncio.Lock()
+        self._conditions = []
+        self._limit = asyncio.Semaphore(self.CONCURRENCY_LIMIT)
+        for item in projects:
+            if isinstance(item, str):
+                self._conditions.append({'project_name': item})
+            else:
+                self._conditions.append(item)
 
     async def fetch(self):
         async with self._lock:
             if self._update_after < time.time():
-                LOG.debug('updating bugs from launchpad')
-                self._cache = await fetch_all()
+                LOG.debug('Updating bugs from launchpad')
+                self._cache = await self._do_fetch()
                 self._update_after = time.time() + self.TIMEOUT
             return self._cache
+
+    async def _do_fetch(self):
+        async with asyncio.TaskGroup() as tg:
+            tasks = [(c['project_name'],
+                      tg.create_task(self.search_bugs(**c)))
+                     for c in self._conditions]
+
+        return {key: task.result() for key, task in tasks}
+
+    async def search_bugs(self, project_name, **conditions):
+        conditions.setdefault('status', OPEN_STATUSES)
+        conditions['ws.op'] = 'searchTasks'
+        conditions['ws.size'] = str(DEFAULT_SIZE)
+
+        url = PROJECT_TEMPLATE % project_name
+        params = []
+        for key, value in conditions.items():
+            if isinstance(value, (list, set)):
+                for item in value:
+                    params.append((key, item))
+            else:
+                params.append((key, value))
+
+        result = []
+        while url:
+            async with self._limit:
+                LOG.debug('Fetching %s from %s', params, url)
+                async with self._session.get(url, params=params) as resp:
+                    raw_result = await resp.json()
+
+            for bug in raw_result['entries']:
+                if bug['assignee_link'] is not None:
+                    bug['assignee'] = bug['assignee_link'].split('~')[1]
+                else:
+                    bug['assignee'] = None
+
+                bug['date_created'] = reformat_date(bug['date_created'])
+
+                result.append(bug)
+
+            url = raw_result.get('next_collection_link')
+            params = []  # the link will contain everything
+
+        return result
+
+
+async def client(projects):
+    # This call must be done inside an sync function, hence not in __init__
+    session = aiohttp.ClientSession(raise_for_status=True)
+    return _Client(session, projects)

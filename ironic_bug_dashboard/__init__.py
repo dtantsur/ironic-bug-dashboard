@@ -15,34 +15,6 @@ template_path = os.path.dirname(os.path.realpath(__file__))
 aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(template_path))
 
 
-def search_in_results(results, status=None, importance=None):
-    result = []
-    if isinstance(status, str):
-        status = (status,)
-
-    for bug in results['all']:
-        if status is not None and bug['status'] not in status:
-            continue
-        if importance is not None and bug['importance'] != importance:
-            continue
-        result.append(bug)
-
-    return result
-
-
-def dedup(bugs):
-    seen = set()
-    result = []
-    for bug in bugs:
-        if bug['bug_link'] in seen:
-            continue
-
-        result.append(bug)
-        seen.add(bug['bug_link'])
-
-    return result
-
-
 PRIORITY_REQUIRED_STATUSES = simple_lp.OPEN_STATUSES - {'Incomplete'}
 STATUS_PRIORITIES = {
     'In Progress': -10,
@@ -51,15 +23,43 @@ STATUS_PRIORITIES = {
 }
 
 
+IRONIC_PROJECTS = (
+    'bifrost',
+    'ironic',
+    'ironic-inspector',
+    'ironic-lib',
+    'ironic-prometheus-exporter',
+    'ironic-python-agent',
+    'ironic-python-agent-builder',
+    'ironic-ui',
+    'metalsmith',
+    'networking-baremetal',
+    'python-ironic-inspector-client',
+    'python-ironicclient',
+    'sushy',
+    'sushy-tools',
+    'virtualbmc',
+    'virtualpdu',
+)
+
+ALL_PROJECTS = IRONIC_PROJECTS + (
+    {'project_name': 'nova', 'tags': 'ironic'},
+)
+
+
 @aiohttp_jinja2.template('template.html')
 async def index(request):
     ironic_bugs = {}
     nova_bugs = {}
 
-    bugs = await request.app['lp_cache'].fetch()
+    if 'lp' not in request.app:
+        LOG.info('Creating a new launchpad client')
+        request.app['lp'] = await simple_lp.client(ALL_PROJECTS)
+
+    bugs = await request.app['lp'].fetch()
 
     ironic_bugs['all'] = []
-    for project in simple_lp.IRONIC_PROJECTS:
+    for project in IRONIC_PROJECTS:
         if project not in bugs:
             continue
         ironic_bugs['all'].extend(bugs[project])
@@ -71,9 +71,9 @@ async def index(request):
     critical_bugs = []
     for d in (ironic_bugs, nova_bugs):
         for status in ('New', 'Incomplete', 'In Progress'):
-            d[status] = list(search_in_results(d, status=status))
+            d[status] = list(simple_lp.search_in_results(d, status=status))
         for importance in ('High', 'Critical', 'Wishlist'):
-            d[importance] = list(search_in_results(
+            d[importance] = list(simple_lp.search_in_results(
                 d, importance=importance))
             if importance == 'Critical':
                 critical_bugs.extend(d[importance])
@@ -81,18 +81,19 @@ async def index(request):
     ironic_bugs['all'] = [x for x in ironic_bugs['all']
                           if x['importance'] != 'Wishlist']
 
-    undecided = search_in_results(ironic_bugs,
-                                  importance='Undecided',
-                                  status=PRIORITY_REQUIRED_STATUSES)
+    undecided = simple_lp.search_in_results(
+        ironic_bugs,
+        importance='Undecided',
+        status=PRIORITY_REQUIRED_STATUSES)
     undecided.sort(key=lambda b: (STATUS_PRIORITIES.get(b['status'], 0),
                                   b['date_created']))
 
-    ironic_new_confirmed = search_in_results(ironic_bugs,
-                                             status=['New', 'Confirmed'])
-    nova_new_confirmed = search_in_results(nova_bugs,
-                                           status=['New', 'Confirmed'])
-    triage_needed = dedup(ironic_new_confirmed + nova_new_confirmed
-                          + undecided)
+    ironic_new_confirmed = simple_lp.search_in_results(
+        ironic_bugs, status=['New', 'Confirmed'])
+    nova_new_confirmed = simple_lp.search_in_results(
+        nova_bugs, status=['New', 'Confirmed'])
+    triage_needed = simple_lp.dedup(
+        ironic_new_confirmed + nova_new_confirmed + undecided)
     triage_needed.sort(key=lambda b: (b['status'] != 'New', b['date_created']))
 
     users = {}
@@ -115,7 +116,6 @@ async def index(request):
 
 
 app.router.add_get('/', index)
-app['lp_cache'] = simple_lp.Cache()
 
 
 def main():
