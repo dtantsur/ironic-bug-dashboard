@@ -81,6 +81,18 @@ async def index(request):
     ironic_bugs['all'] = [x for x in ironic_bugs['all']
                           if x['importance'] != 'Wishlist']
 
+    nova_triaged_bugs = []
+    nova_unconfirmed_undecided = []
+    for bug in nova_bugs['all']:
+        if (bug['status'] == 'Confirmed' and bug['importance'] != 'Undecided'):
+            nova_triaged_bugs.append(bug)
+        else:
+            nova_unconfirmed_undecided.append(bug)
+    nova_triaged_bugs.sort(key=lambda b: (STATUS_PRIORITIES.get(b['status'], 0),
+                                        b['date_created']))
+
+    nova_bugs['all'] = nova_unconfirmed_undecided
+
     undecided = simple_lp.search_in_results(
         ironic_bugs,
         importance='Undecided',
