@@ -120,6 +120,7 @@ async def index(request):
     return dict(
         ironic_bugs=ironic_bugs,
         nova_bugs=nova_bugs,
+        nova_triaged_bugs=nova_triaged_bugs,
         triage_needed=triage_needed,
         users=users,
         unassigned_in_progress=unassigned_in_progress,
