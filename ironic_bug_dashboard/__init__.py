@@ -16,6 +16,9 @@ app = web.Application()
 template_path = os.path.dirname(os.path.realpath(__file__))
 aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(template_path))
 
+parser = argparse.ArgumentParser(description='Load configuration from commandline.')
+parser.add_argument('project_name', nargs='?', type=str, help='Name of the project.')
+args, unknown_args = parser.parse_known_args()
 
 PRIORITY_REQUIRED_STATUSES = simple_lp.OPEN_STATUSES - {'Incomplete'}
 STATUS_PRIORITIES = {
