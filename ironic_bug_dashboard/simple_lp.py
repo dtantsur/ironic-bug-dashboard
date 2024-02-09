@@ -7,6 +7,7 @@ import time
 
 import aiohttp
 
+CONFIG_DIR = 'configs'
 
 LOG = logging.getLogger(__name__)
 
