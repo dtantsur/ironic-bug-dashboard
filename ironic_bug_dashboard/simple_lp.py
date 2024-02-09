@@ -20,6 +20,24 @@ DEFAULT_SIZE = 100
 DATE_RE = re.compile(r"(.*)T(.*)\..*\+(.*)")
 
 
+def load_config(project_name):
+    if project_name is None:
+        return project_name
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    config_dir = os.path.join(current_dir, CONFIG_DIR)
+    config_file = os.path.join(config_dir, f"{project_name}.json")
+    
+    config_data = {}
+    try:
+        with open(config_file, "r") as f:
+            config_data = json.load(f)
+    except FileNotFoundError:
+        LOG.error("%s.json not found at %s", project_name, config_dir)
+
+    return config_data
+
+
 def reformat_date(date):
     if not date:
         return date
