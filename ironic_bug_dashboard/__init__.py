@@ -20,36 +20,22 @@ parser = argparse.ArgumentParser(description='Load configuration from commandlin
 parser.add_argument('project_name', nargs='?', type=str, help='Name of the project.')
 args, unknown_args = parser.parse_known_args()
 
-PRIORITY_REQUIRED_STATUSES = simple_lp.OPEN_STATUSES - {'Incomplete'}
-STATUS_PRIORITIES = {
-    'In Progress': -10,
-    'Triaged': -5,
-    'Confirmed': -5
-}
+config = simple_lp.load_config(args.project_name)
+if config is None or len(config) <= 0:
+    LOG.error('Configuration file cannot be empty.')
+    sys.exit()
 
+LOG.info("*" * 80)
+LOG.info("Configuration options gathered from:")
+LOG.info("command line args: %s", args)
+LOG.info("config file: %s", args.project_name)
+LOG.info("=" * 80)
 
-IRONIC_PROJECTS = (
-    'bifrost',
-    'ironic',
-    'ironic-inspector',
-    'ironic-lib',
-    'ironic-prometheus-exporter',
-    'ironic-python-agent',
-    'ironic-python-agent-builder',
-    'ironic-ui',
-    'metalsmith',
-    'networking-baremetal',
-    'python-ironic-inspector-client',
-    'python-ironicclient',
-    'sushy',
-    'sushy-tools',
-    'virtualbmc',
-    'virtualpdu',
-)
-
-ALL_PROJECTS = IRONIC_PROJECTS + (
-    {'project_name': 'nova', 'tags': 'ironic'},
-)
+IRONIC_PROJECTS = config.get('projects', [])
+TAGGED_PROJECTS = config.get('tagged_projects', [])
+ALL_PROJECTS = IRONIC_PROJECTS + [TAGGED_PROJECTS]
+PRIORITY_REQUIRED_STATUSES = config.get('priority_required_statuses', [])
+STATUS_PRIORITIES = config.get('status_priorities', [])
 
 
 @aiohttp_jinja2.template('template.html')
