@@ -27,10 +27,10 @@ def load_config(project_name):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     config_dir = os.path.join(current_dir, CONFIG_DIR)
     config_file = os.path.join(config_dir, f"{project_name}.json")
-    
+
     config_data = {}
     try:
-        with open(config_file, "r") as f:
+        with open(config_file, mode="r", encoding='utf-8') as f:
             config_data = json.load(f)
     except FileNotFoundError:
         LOG.error("%s.json not found at %s", project_name, config_dir)
