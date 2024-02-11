@@ -33,7 +33,7 @@ LOG.info("=" * 80)
 
 IRONIC_PROJECTS = config.get('projects', [])
 TAGGED_PROJECTS = config.get('tagged_projects', [])
-ALL_PROJECTS = IRONIC_PROJECTS + [TAGGED_PROJECTS]
+ALL_PROJECTS = IRONIC_PROJECTS + TAGGED_PROJECTS
 PRIORITY_REQUIRED_STATUSES = config.get('priority_required_statuses', [])
 STATUS_PRIORITIES = config.get('status_priorities', [])
 
