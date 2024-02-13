@@ -1,6 +1,6 @@
 This is a dashboard for tracking outstanding bugs in **Ironic**.
 
-**Ironic** is one of the software components in OpenStack that fully manages baremetal infrastructure; it discovers bare-metal modes; catalogs them in a management database and manages the entire server lifecycle; from enrolling to provisioning, maintenance and decomissioning.
+**Ironic** is one of the software components in OpenStack that fully manages bare-metal infrastructure; it discovers bare-metal nodes; catalogs them in a management database and manages the entire server lifecycle; from enrolling to provisioning, maintenance and decomissioning.
 
 And **OpenStack** is an opensource cloud software project that is made up of a collection of software components that provide common services for cloud infrastructure.
 
