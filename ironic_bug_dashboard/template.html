@@ -32,6 +32,10 @@ assigned to <a href="https://launchpad.net/~{{ bug.assignee }}">
 {% endif %}
 {%- endmacro -%}
 
+{%- macro render_link(link) -%}
+<li><a href="{{ link.url }}">{{ link.title }}</a>
+{%- endmacro -%}
+
 <div class="container">
 <hr>
 
@@ -50,6 +54,14 @@ Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
 {{ nova_bugs['New'] | length }} new,
 {{ nova_bugs['Critical'] | length }} critical,
 {{ nova_bugs['High'] | length }} high</p>
+
+<h1>Useful Links</h1>
+
+<ul>
+{% for link in useful_links %}
+{{ render_link(link) }}
+{% endfor %}
+</ul>
 
 <h1>Attention Required</h1>
 
