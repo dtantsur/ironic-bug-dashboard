@@ -20,16 +20,14 @@ parser = argparse.ArgumentParser(description='Load configuration from commandlin
 parser.add_argument('project_name', nargs='?', type=str, help='Name of the project.')
 args, unknown_args = parser.parse_known_args()
 
+LOG.info("*" * 80)
+LOG.info("Configuration options gathered from:")
+LOG.info("command line args: %s", args)
+
 config = simple_lp.load_config(args.project_name)
 if config is None or len(config) <= 0:
     LOG.error('Configuration file cannot be empty.')
     sys.exit()
-
-LOG.info("*" * 80)
-LOG.info("Configuration options gathered from:")
-LOG.info("command line args: %s", args)
-LOG.info("config file: %s", args.project_name)
-LOG.info("=" * 80)
 
 IRONIC_PROJECTS = config.get('projects', [])
 TAGGED_PROJECTS = config.get('tagged_projects', [])
