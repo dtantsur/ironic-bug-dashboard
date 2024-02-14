@@ -2,7 +2,6 @@
     "projects": [
         "bifrost",
         "ironic",
-        "nova",
         "ironic-inspector",
         "ironic-lib",
         "ironic-prometheus-exporter",
@@ -11,6 +10,7 @@
         "ironic-ui",
         "metalsmith",
         "networking-baremetal",
+        "nova",
         "python-ironic-inspector-client",
         "python-ironicclient",
         "sushy",
