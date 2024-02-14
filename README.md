@@ -2,7 +2,7 @@ This is a dashboard for tracking outstanding bugs in **Ironic**.
 
 [**Ironic**](https://ironicbaremetal.org/) is one of the software components in OpenStack that fully manages bare-metal infrastructure; it discovers bare-metal nodes; catalogs them in a management database and manages the entire server lifecycle; from enrolling to provisioning, maintenance and decommissioning.
 
-[**OpenStack**](https://www.openstack.org/) is an opensource cloud software project that includes of a collection of software components providing common services for cloud infrastructure.
+[**OpenStack**](https://www.openstack.org/) is an opensource cloud software project that includes a collection of software components providing common services for cloud infrastructure.
 
 ## Setup
 Before diving into the setup process, ensure that your Python version is `>=python3.11`.
