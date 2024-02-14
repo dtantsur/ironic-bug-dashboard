@@ -33,7 +33,7 @@
     "useful_links": [
         {
           "url": "https://docs.openstack.org/ironic/latest/index.html",
-          "title": "ironic 24.0.1.dev16"
+          "title": "current ironic development version"
         },
         {
           "url": "https://docs.openstack.org/ironic/latest/install/index.html",
