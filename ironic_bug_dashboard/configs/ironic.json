@@ -8,7 +8,6 @@
         "ironic-python-agent",
         "ironic-python-agent-builder",
         "ironic-ui",
-        "ironic-tempest-plugin",
         "metalsmith",
         "networking-baremetal",
         "networking-generic-switch",
