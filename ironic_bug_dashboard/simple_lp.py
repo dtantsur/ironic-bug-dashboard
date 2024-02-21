@@ -33,7 +33,7 @@ def load_config(project_name):
         with open(config_file, mode="r", encoding='utf-8') as f:
             config_data = json.load(f)
     except FileNotFoundError:
-        LOG.error("%s.json not found at %s", project_name, config_dir)
+        pass
 
     return config_data
 
