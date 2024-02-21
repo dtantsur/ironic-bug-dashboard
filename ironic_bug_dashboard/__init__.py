@@ -22,9 +22,9 @@ if not config:
     LOG.error('Configuration file cannot be empty.')
     sys.exit(1)
 
-IRONIC_PROJECTS = config.get('projects', [])
+PROJECTS = config.get('projects', [])
 TAGGED_PROJECTS = config.get('tagged_projects', [])
-ALL_PROJECTS = IRONIC_PROJECTS + TAGGED_PROJECTS
+ALL_PROJECTS = PROJECTS + TAGGED_PROJECTS
 PRIORITY_REQUIRED_STATUSES = config.get('priority_required_statuses', [])
 STATUS_PRIORITIES = config.get('status_priorities', [])
 
@@ -43,7 +43,7 @@ async def index(request):
     bugs = await request.app['lp'].fetch()
 
     ironic_bugs['all'] = []
-    for project in IRONIC_PROJECTS:
+    for project in PROJECTS:
         if project not in bugs:
             continue
         ironic_bugs['all'].extend(bugs[project])
