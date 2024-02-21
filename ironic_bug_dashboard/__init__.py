@@ -20,7 +20,7 @@ project_name = os.getenv('PROJECT_NAME')
 config = simple_lp.load_config(project_name)
 if not config:
     LOG.error('Configuration file cannot be empty.')
-    sys.exit()
+    sys.exit(1)
 
 IRONIC_PROJECTS = config.get('projects', [])
 TAGGED_PROJECTS = config.get('tagged_projects', [])
