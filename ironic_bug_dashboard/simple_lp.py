@@ -28,9 +28,6 @@ def load_config(project_name):
     config_dir = os.path.join(current_dir, CONFIG_DIR)
     config_file = os.path.join(config_dir, f"{project_name}.json")
 
-    LOG.info("config file: %s", config_file)
-    LOG.info("=" * 80)
-
     config_data = {}
     try:
         with open(config_file, mode="r", encoding='utf-8') as f:
