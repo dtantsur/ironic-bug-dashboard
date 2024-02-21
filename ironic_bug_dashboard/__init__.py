@@ -17,12 +17,8 @@ aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(template_path))
 
 project_name = os.getenv('PROJECT_NAME')
 
-LOG.info("*" * 80)
-LOG.info("Configuration options gathered from:")
-LOG.info("command line args: %s", args)
-
-config = simple_lp.load_config(args.project_name)
-if config is None or len(config) <= 0:
+config = simple_lp.load_config(project_name)
+if not config:
     LOG.error('Configuration file cannot be empty.')
     sys.exit()
 
