@@ -1,7 +1,6 @@
-import sys
-import os
 import logging
-import argparse
+import os
+import sys
 
 from aiohttp import web
 import aiohttp_jinja2
