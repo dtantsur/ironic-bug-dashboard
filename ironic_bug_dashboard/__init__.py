@@ -105,6 +105,10 @@ app.router.add_get('/', index)
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
+
+    LOG.info("Configuration options gathered from: environment variables: %s",
+             project_name)
+
     try:
         web.run_app(app, host='127.0.0.1', port=8000)
     except KeyboardInterrupt:
