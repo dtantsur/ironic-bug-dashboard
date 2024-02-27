@@ -28,8 +28,6 @@ ALL_PROJECTS = PROJECTS + TAGGED_PROJECTS
 PRIORITY_REQUIRED_STATUSES = config.get('priority_required_statuses', [])
 STATUS_PRIORITIES = config.get('status_priorities', [])
 
-USEFUL_LINKS = config.get('useful_links', [])
-
 
 @aiohttp_jinja2.template('template.html')
 async def index(request):
@@ -95,8 +93,7 @@ async def index(request):
         triage_needed=triage_needed,
         users=users,
         unassigned_in_progress=unassigned_in_progress,
-        critical_bugs=critical_bugs,
-        useful_links=USEFUL_LINKS,
+        critical_bugs=critical_bugs
     )
 
 

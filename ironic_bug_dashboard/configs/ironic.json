@@ -30,55 +30,5 @@
         "In Progress": -10,
         "Triaged": -5,
         "Confirmed": -5
-    },
-    "useful_links": [
-        {
-          "url": "https://docs.openstack.org/ironic/latest/index.html",
-          "title": "current ironic development version"
-        },
-        {
-          "url": "https://docs.openstack.org/ironic/latest/install/index.html",
-          "title": "Bare Metal Service Installation Guide"
-        },
-        {
-          "url": "https://docs.openstack.org/ironic/latest/install/standalone.html",
-          "title": "Using Bare Metal service as a standalone service"
-        },
-        {
-          "url": "https://docs.openstack.org/ironic/latest/admin/upgrade-guide.html",
-          "title": "Bare Metal Service Upgrade Guide"
-        },
-        {
-          "url": "https://docs.openstack.org/ironic/latest/user/index.html",
-          "title": "Bare Metal Service User Guide"
-        },
-        {
-          "url": "https://docs.openstack.org/ironic/latest/admin/drivers.html",
-          "title": "Drivers, Hardware Types and Hardware Interfaces"
-        },
-        {
-          "url": "https://docs.openstack.org/ironic/latest/admin/index.html",
-          "title": "Administrator’s Guide"
-        },
-        {
-          "url": "https://docs.openstack.org/ironic/latest/configuration/index.html",
-          "title": "Configuration Reference"
-        },
-        {
-          "url": "https://docs.openstack.org/api-ref/baremetal/",
-          "title": "API Reference (latest)"
-        },
-        {
-          "url": "https://docs.openstack.org/ironic/latest/contributor/webapi-version-history.html",
-          "title": "API Version History"
-        },
-        {
-          "url": "https://docs.openstack.org/ironic/latest/cli/index.html",
-          "title": "Command References"
-        },
-        {
-          "url": "https://docs.openstack.org/ironic/latest/contributor/index.html",
-          "title": "Developer’s Guide"
-        }
-      ]
+    }
   }
