@@ -61,6 +61,14 @@ Nova bugs with Ironic tag</a>: {{ nova_bugs['all'] | length }}.
 {% endfor %}
 </ul>
 
+<h2>Nova Triaged Bugs</h2>
+<p>Nova bugs whose importance is not 'Undecided', or status is not 'New'.</p>
+<ul>
+{% for bug in nova_triaged_bugs %}
+{{ render_bug(bug) }}
+{% endfor %}
+</ul>
+
 <h2>Triage Needed</h2>
 <p>Bugs that have 'Undecided' importance or status 'New' or 'Confirmed'.
 Set importance and mark as 'Triaged'.</p>
