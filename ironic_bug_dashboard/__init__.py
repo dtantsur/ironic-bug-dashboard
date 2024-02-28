@@ -88,8 +88,9 @@ async def index(request):
             nova_triage_needed_bugs.append(bug)
         else:
             nova_triaged_bugs.append(bug)
-    nova_triaged_bugs.sort(key=lambda b: (STATUS_PRIORITIES.get(b['status'], 0),
-                                        b['date_created']))
+    nova_triaged_bugs.sort(
+        key=lambda b: (STATUS_PRIORITIES.get(b['status'], 0),
+                       b['date_created']))
 
     nova_bugs['all'] = nova_triage_needed_bugs
 
