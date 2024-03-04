@@ -78,6 +78,22 @@ Set importance and mark as 'Triaged'.</p>
 {% endfor %}
 </ul>
 
+<h2>Ancient Bugs</h2>
+<p>Bugs that are older than 1 year.</p>
+<ul>
+{% for bug in ancient_bugs %}
+{{ render_bug(bug) }}
+{% endfor %}
+</ul>
+
+<h2>Nova Triaged Bugs</h2>
+<p>Nova bugs whose importance is not 'Undecided', or status is not 'New'.</p>
+<ul>
+{% for bug in nova_triaged_bugs %}
+{{ render_bug(bug) }}
+{% endfor %}
+</ul>
+
 <hr>
 
 <h1>In Progress Bugs</h1>

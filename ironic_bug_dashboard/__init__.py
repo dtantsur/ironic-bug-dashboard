@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import sys
@@ -63,6 +64,19 @@ async def index(request):
     ironic_bugs['all'] = [x for x in ironic_bugs['all']
                           if x['importance'] != 'Wishlist']
 
+    nova_triaged_bugs = []
+    nova_triage_needed_bugs = []
+    for bug in nova_bugs['all']:
+        if (bug['status'] == 'New' or bug['importance'] == 'Undecided'):
+            nova_triage_needed_bugs.append(bug)
+        else:
+            nova_triaged_bugs.append(bug)
+    nova_triaged_bugs.sort(
+        key=lambda b: (STATUS_PRIORITIES.get(b['status'], 0),
+                       b['date_created']))
+
+    nova_bugs['all'] = nova_triage_needed_bugs
+
     undecided = simple_lp.search_in_results(
         ironic_bugs,
         importance='Undecided',
@@ -87,13 +101,23 @@ async def index(request):
         else:
             unassigned_in_progress.append(bug)
 
+    threshold = (datetime.datetime.now(datetime.timezone.utc)
+                 - datetime.timedelta(days=365))
+    threshold = threshold.isoformat(sep=' ', timespec='seconds')
+    LOG.debug('Considering bugs ancient before %s', threshold)
+    ancient_bugs = [bug for bug in ironic_bugs['all']
+                    if bug['date_created'] < threshold]
+    ancient_bugs.sort(key=lambda b: b['date_created'])
+
     return dict(
         ironic_bugs=ironic_bugs,
         nova_bugs=nova_bugs,
+        nova_triaged_bugs=nova_triaged_bugs,
         triage_needed=triage_needed,
         users=users,
         unassigned_in_progress=unassigned_in_progress,
-        critical_bugs=critical_bugs
+        critical_bugs=critical_bugs,
+        ancient_bugs=ancient_bugs,
     )
 
 
