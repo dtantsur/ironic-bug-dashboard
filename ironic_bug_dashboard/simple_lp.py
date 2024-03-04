@@ -1,10 +1,13 @@
+import os
 import asyncio
 import logging
 import re
+import json
 import time
 
 import aiohttp
 
+CONFIG_DIR = 'configs'
 
 LOG = logging.getLogger(__name__)
 
@@ -15,6 +18,24 @@ PROJECT_TEMPLATE = 'https://api.launchpad.net/1.0/%s'
 DEFAULT_SIZE = 100
 
 DATE_RE = re.compile(r"(.*)T(.*)\..*\+(.*)")
+
+
+def load_config(project_name):
+    if project_name is None:
+        return project_name
+
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    config_dir = os.path.join(current_dir, CONFIG_DIR)
+    config_file = os.path.join(config_dir, f"{project_name}.json")
+
+    config_data = {}
+    try:
+        with open(config_file, mode="r", encoding='utf-8') as f:
+            config_data = json.load(f)
+    except FileNotFoundError:
+        pass
+
+    return config_data
 
 
 def reformat_date(date):
