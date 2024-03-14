@@ -1,44 +1,44 @@
-This is a dashboard for tracking outstanding bugs in **Ironic**.
+# Ironic Bug Dashbaord
 
-[**Ironic**](https://ironicbaremetal.org/) is one of the software components in OpenStack that fully manages bare-metal infrastructure; it discovers bare-metal nodes; catalogs them in a management database and manages the entire server lifecycle; from enrolling to provisioning, maintenance and decommissioning.
+This is an AIOHTTP dashboard application for tracking outstanding bugs in Launchpad projects.
 
-[**OpenStack**](https://www.openstack.org/) is an opensource cloud software project that includes a collection of software components providing common services for cloud infrastructure.
+## Setup & Local Testing
+- Create a <project_name>.json file in the `ironic_bug_dashboard/configs/` directory.
 
-## Setup
-Before diving into the setup process, ensure that your Python version is `>=python3.11`.
+E.g:
 
-### Creating a Virtual Environment
-To keep your dependencies isolated, it's recommended to create a virtual environment. You can do this by running the following commands:
+`ironic_bug_dashboard/configs/ironic.json`:
+
+```
+{
+    "projects": [
+        //project(s),
+    ],
+    "tagged_projects": [
+        {
+            "project_name": "nova",
+            "tags": "ironic"
+        },
+        ...
+    ],
+    "priority_required_statuses": ["New", "In Progress", "Triaged", "Confirmed"],
+    "status_priorities": {
+        "In Progress": -10,
+        "Triaged": -5,
+        "Confirmed": -5
+    }
+  }
+```
+
+- Run Locally
+
+The `tox -erun` command installs and manages dependencings and also spins up the dashboard for local testing use.
 
 ```bash
-$ python3 -m venv env
-$ source env/bin/activate  # For Unix/Linux
-$ env\Scripts\activate      # For Windows
-```
-
-This will activate the virtual environment, providing a clean workspace for your project.
-
-### Installing Dependencies
-Once inside your virtual environment, you can install the required dependencies using pip:
-
-```bash
-$ pip install -r requirements.txt
-```
-
-This command will install all the necessary Python packages listed in the `requirements.txt` file.
-
-## Usage
-This is an AIOHTTP application and can be run as such.
-
-
-### 🧪 Run in Development
-For local testing use:
-
-```
 $ tox -erun
 ```
 
-### 🚀 Run in Production
+## 🚀 Run in Production
 For actual production, a Dockerfile is provided that uses gunicorn internally:
 
 ```
@@ -47,31 +47,14 @@ $ podman run --name ironic-bug-dashboard --publish 8000:8000 ironic-bug-dashboar
 ```
 
 ## Features
-Tracking outstanding bugs in Ironic for contributors, bug deputies/triagers.
+Tracking outstanding bugs for contributors, bug deputies/triagers.
 
 ## ❤️ How to Contribute
-Contributions are welcomed and encouraged! 
+Contributions are welcomed and encouraged!
 
-This repo uses Github Issues and Github fork-then-PR workflow for development and here's how you can contribute:
-
-1. Clone the repository and create a new branch for your changes:
-
-```
-$ git checkout https://github.com/dtantsur/ironic-bug-dashboard/ -b name_for_new_branch
-```
-
-2. Make your desired changes and ensure to test them thoroughly.
-
-3. Submit a Pull Request with a detailed description of your changes. Your contribution will be reviewed by the project maintainers.
-
-For information on how to contribute to ironic, see https://docs.openstack.org/ironic/latest/contributor
+This repo uses Github Issues and Github fork-then-PR workflow for development.
 
 ## ©️ License
-This project is licensed under the ⚖️ [MIT License](https://github.com/dtantsur/ironic-bug-dashboard/?tab=MIT-1-ov-file).
+This project is licensed under the ⚖️ [MIT License](https://github.com/dtantsur/ironic-bug-dashboard/blob/master/LICENSE).
 
 Feel free to use and modify it according to the terms specified in the license.
-
-## 🔗 Project Links
-- OpenStack: https://www.openstack.org/
-- Ironic: https://opendev.org/openstack/ironic/
-- Ironic Bugs: https://bugs.launchpad.net/ironic/+bugs
