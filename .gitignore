@@ -4,3 +4,4 @@ AUTHORS
 ChangeLog
 *.egg-info/
 *.pyc
+env/
