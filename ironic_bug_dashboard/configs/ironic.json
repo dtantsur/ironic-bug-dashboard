@@ -1,0 +1,33 @@
+{
+    "projects": [
+        "bifrost",
+        "ironic",
+        "ironic-inspector",
+        "ironic-lib",
+        "ironic-prometheus-exporter",
+        "ironic-python-agent",
+        "ironic-python-agent-builder",
+        "ironic-ui",
+        "metalsmith",
+        "networking-baremetal",
+        "networking-generic-switch",
+        "python-ironic-inspector-client",
+        "python-ironicclient",
+        "sushy",
+        "sushy-tools",
+        "virtualbmc",
+        "virtualpdu"
+    ],
+    "tagged_projects": [
+        {
+            "project_name": "nova",
+            "tags": "ironic"
+        }
+    ],
+    "priority_required_statuses": ["New", "In Progress", "Triaged", "Confirmed"],
+    "status_priorities": {
+        "In Progress": -10,
+        "Triaged": -5,
+        "Confirmed": -5
+    }
+  }

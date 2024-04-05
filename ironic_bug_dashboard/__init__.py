@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import sys
 
 from aiohttp import web
 import aiohttp_jinja2
@@ -15,37 +16,18 @@ app = web.Application()
 template_path = os.path.dirname(os.path.realpath(__file__))
 aiohttp_jinja2.setup(app, loader=jinja2.FileSystemLoader(template_path))
 
+project_name = os.getenv('PROJECT_NAME')
 
-PRIORITY_REQUIRED_STATUSES = simple_lp.OPEN_STATUSES - {'Incomplete'}
-STATUS_PRIORITIES = {
-    'In Progress': -10,
-    'Triaged': -5,
-    'Confirmed': -5
-}
+config = simple_lp.load_config(project_name)
+if not config:
+    LOG.error('Configuration file cannot be empty.')
+    sys.exit(1)
 
-
-IRONIC_PROJECTS = (
-    'bifrost',
-    'ironic',
-    'ironic-inspector',
-    'ironic-lib',
-    'ironic-prometheus-exporter',
-    'ironic-python-agent',
-    'ironic-python-agent-builder',
-    'ironic-ui',
-    'metalsmith',
-    'networking-baremetal',
-    'python-ironic-inspector-client',
-    'python-ironicclient',
-    'sushy',
-    'sushy-tools',
-    'virtualbmc',
-    'virtualpdu',
-)
-
-ALL_PROJECTS = IRONIC_PROJECTS + (
-    {'project_name': 'nova', 'tags': 'ironic'},
-)
+PROJECTS = config.get('projects', [])
+TAGGED_PROJECTS = config.get('tagged_projects', [])
+ALL_PROJECTS = PROJECTS + TAGGED_PROJECTS
+PRIORITY_REQUIRED_STATUSES = config.get('priority_required_statuses', [])
+STATUS_PRIORITIES = config.get('status_priorities', [])
 
 
 @aiohttp_jinja2.template('template.html')
@@ -60,7 +42,7 @@ async def index(request):
     bugs = await request.app['lp'].fetch()
 
     ironic_bugs['all'] = []
-    for project in IRONIC_PROJECTS:
+    for project in PROJECTS:
         if project not in bugs:
             continue
         ironic_bugs['all'].extend(bugs[project])
@@ -144,6 +126,10 @@ app.router.add_get('/', index)
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
+
+    LOG.info("Configuration options gathered from: environment variables: %s",
+             project_name)
+
     try:
         web.run_app(app, host='127.0.0.1', port=8000)
     except KeyboardInterrupt:
